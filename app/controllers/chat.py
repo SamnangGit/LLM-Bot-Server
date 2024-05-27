@@ -6,7 +6,6 @@ class ChatController:
         self.model = GenerativeModel()
 
 
-    def send_message(self, message_text):
-        # message = Message(text=message_text)
-        response = self.model.start_chat(message_text)
+    def send_message(self, message):
+        response = self.model.start_chat(message)
         return response

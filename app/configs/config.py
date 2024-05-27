@@ -1,30 +1,19 @@
-from dotenv import load_dotenv
+import yaml
+from google.generativeai.types.safety_types import HarmBlockThreshold, HarmCategory
 
-load_dotenv()
 
-generation_config = {
-  "temperature": 1,
-  "top_p": 0.95,
-  "top_k": 64,
-  "max_output_tokens": 8192,
-  "response_mime_type": "text/plain",
+with open('../app/configs/chat_model_config.yaml', 'r') as f:
+    configs = yaml.safe_load(f)
+    # print(configs)
+
+# Get the safety_settings dictionary
+safety_settings_str = configs['safety_settings']
+
+# Map string keys to HarmCategory values
+safety_settings = {
+    getattr(HarmCategory, key): getattr(HarmBlockThreshold, value)
+    for key, value in safety_settings_str.items()
 }
 
-safety_settings = [
-  {
-    "category": "HARM_CATEGORY_HARASSMENT",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-  },
-  {
-    "category": "HARM_CATEGORY_HATE_SPEECH",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-  },
-  {
-    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-  },
-  {
-    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-  },
-]
+generation_settings = configs['generation_settings']
+# print(generation_settings['temperature'])

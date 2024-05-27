@@ -1,16 +1,15 @@
-generation_config:
-  temperature: 1
-  top_p: 0.95
-  top_k: 64
-  max_output_tokens: 8192
-  response_mime_type: "text/plain"
+
+generation_settings:
+  tags: null
+  temperature: 0.0
+  timeout: null
+  top_k: null
+  top_p: null
+  transport: null
+  verbose: null
 
 safety_settings:
-  - category: "HARM_CATEGORY_HARASSMENT"
-    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-  - category: "HARM_CATEGORY_HATE_SPEECH"
-    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-  - category: "HARM_CATEGORY_SEXUALLY_EXPLICIT"
-    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-  - category: "HARM_CATEGORY_DANGEROUS_CONTENT"
-    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+  HARM_CATEGORY_DANGEROUS_CONTENT: BLOCK_MEDIUM_AND_ABOVE
+  HARM_CATEGORY_HATE_SPEECH: BLOCK_ONLY_HIGH
+  HARM_CATEGORY_HARASSMENT: BLOCK_LOW_AND_ABOVE
+  HARM_CATEGORY_SEXUALLY_EXPLICIT: BLOCK_LOW_AND_ABOVE
