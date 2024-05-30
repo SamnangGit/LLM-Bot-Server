@@ -1,10 +1,10 @@
 
 generation_settings:
   tags: null
-  temperature: 0.0
+  temperature: 0.5
   timeout: null
-  top_k: null
-  top_p: null
+  top_k: 0.5
+  top_p: 0.5
   transport: null
   verbose: null
 
