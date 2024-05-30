@@ -15,11 +15,11 @@ load_dotenv()
 
 class GenerativeModel:
     def __init__(self):
-        # self.chat = self.gemini_model()
+        self.chat = self.gemini_model()
         # self.chat = self.openai_model()
         # self.chat = self.qroq_model()
         # self.chat = self.deepinfra_model()
-        self.chat = self.anthropic_model()
+        # self.chat = self.anthropic_model()
 
 
 

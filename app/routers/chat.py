@@ -1,14 +1,19 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from controllers.chat import ChatController
-from schemas.chat import Message
 
 router = APIRouter()
 chat_controller = ChatController()
 
 @router.post("/message")
 async def send_message(request: Request):
-    data = await request.json()
-    message = data["message"]
+    if request.headers.get('Content-Type') != 'application/json':
+        raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
+    try:
+        data = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid JSON format")
+    message = data.get("message")
+    if message is None:
+        raise HTTPException(status_code=400, detail="Message field is required")
     response = chat_controller.send_message(message)
     return {"response": response}
-
