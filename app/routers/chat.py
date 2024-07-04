@@ -30,3 +30,13 @@ async def send_custom_chat_message(request: Request):
         raise HTTPException(status_code=400, detail="Invalid JSON format")
     response = chat_controller.start_custom_chat(data)
     return {"response": response}
+
+
+@router.get("/platforms")
+async def get_platforms():
+    platforms = chat_controller.get_llm_platforms()
+    # log platform
+    # print(platforms)
+
+
+    return platforms

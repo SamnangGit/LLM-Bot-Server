@@ -1,8 +1,10 @@
 from models.chat import GenerativeModel
 from schemas.chat import Message
+from utils.platform_util import PlatformUtils
 
 class ChatController:
     def __init__(self):
+        self.platform_util = PlatformUtils()
         self.model = GenerativeModel()
 
 
@@ -18,16 +20,16 @@ class ChatController:
         temperature = data.get("temperature")
         top_p = data.get("top_p")
         top_k = data.get("top_k")
-        response, parent, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
+        response, platform, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
         try:
-            formatted_response = self.standardize_response(model_code, parent, response)
+            formatted_response = self.standardize_response(model_code, platform, response)
         except Exception as e:
             return {"error": str(e)}
         return formatted_response
     
 
-    def standardize_response(self, model_code, parent, response):
-        if parent == "groq_model":
+    def standardize_response(self, model_code, platform, response):
+        if platform == "groq_platform":
             standardized_response = {
                 "content": response.content,
                 "response_metadata": {
@@ -40,7 +42,7 @@ class ChatController:
                 }
             }
             return standardized_response
-        elif parent == "deepinfra_model":
+        elif platform == "deepinfra_platform":
                 standardized_response = {
                     "content": response,
                     "response_metadata": {
@@ -53,9 +55,9 @@ class ChatController:
                     }
                 }
                 return standardized_response
-        elif parent == "anthropic_model":
-            response = response['response']
-        elif parent == "openai_model":
+        elif platform == "anthropic_platform":
+            response = response['response'],
+        elif platform == "openai_platform":
                 standardized_response = {
                     "content": response,
                     "response_metadata": {
@@ -68,7 +70,7 @@ class ChatController:
                     }
                 }
                 return standardized_response
-        elif parent == "gemini_model":
+        elif platform == "gemini_platform":
                 standardized_response = {
                     "content": response.content,
                     "response_metadata": {
@@ -84,3 +86,8 @@ class ChatController:
         else:
             response = response['response']
 
+
+    def get_llm_platforms(self):
+        return self.platform_util.get_llm_platforms()
+        
+        

@@ -21,7 +21,7 @@ class GenerativeModel:
         self.platform_utils = PlatformUtils()
         self.chat = None
 
-    def gemini_model(self, model_code, temperature):
+    def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 
                                       google_api_key=os.getenv("GEMINI_API_KEY"),
                                       safety_settings=safety_settings,
@@ -31,7 +31,7 @@ class GenerativeModel:
                                       stream=False)    
         return llm  
 
-    def openai_model(self, model_code, temperature):
+    def openai_platform(self, model_code, temperature):
         template = """Question: {question}
 
         Answer: Let's think step by step."""
@@ -50,14 +50,14 @@ class GenerativeModel:
         return llm_chain
     
 
-    def groq_model(self, model_code, temperature=0.5):
+    def groq_platform(self, model_code, temperature=0.5):
         llm = ChatGroq(model=model_code, api_key=os.getenv("GROQ_API_KEY"),
                         temperature=temperature)
         print(f"Model: {model_code}, Temperature: {temperature}")
         return llm
     
 
-    def deepinfra_model(self, model_code, temperature):
+    def deepinfra_platform(self, model_code, temperature):
         llm = DeepInfra(model_id=model_code, deepinfra_api_token=os.getenv("DEEPINFRA_API_TOKEN"),
                         model_kwargs = {"temperature": temperature, 
                                         "top_p": generation_settings['top_p'],
@@ -66,7 +66,7 @@ class GenerativeModel:
         return llm
     
 
-    def anthropic_model(self, model_code):
+    def anthropic_platform(self, model_code):
         llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"), temperature=generation_settings['temperature'])
         return llm
 
@@ -75,17 +75,16 @@ class GenerativeModel:
         return response
 
     def start_custom_chat(self, model, message: Message,  temperature, top_p, top_k):
-        model_code, parent = self.platform_utils.load_yaml_and_get_model(model)
-        if model_code and parent:
-            parent = parent.replace('(self)', '').strip()
-            self.chat = getattr(self, parent)(model_code, temperature)
+        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+        if model_code and platform:
+            self.chat = getattr(self, platform)(model_code, temperature)
         else:
             return {"error": "Model not found"}, 400
         try:
             response = self.chat.invoke(message)
         except Exception as e:
             return {"error": str(e)}      
-        return response, parent, model_code
+        return response, platform, model_code
     
 
 

@@ -1,23 +1,23 @@
-gemini_model(self):
+gemini_platform:
   - Gemini 1.5 Pro: gemini-1.5-pro
   - Gemini 1.5 Flash: gemini-1.5-flash
   - Gemini 1.0 Pro: gemini-1.0-pro
 
-openai_model(self):
+openai_platform:
   - GPT 3.5 Turbo: gpt-3.5-turbo-instruct
 
-groq_model(self):
+groq_platform:
   - Gemma 7B IT: gemma-7b-it
   - Llama3 70B 8192: llama3-70b-8192
   - Llama3 8B 8192: llama3-8b-8192
   - Mixtral 8x7B 32768: mixtral-8x7b-32768
 
-anthropic_model(self):
+anthropic_platform:
   - Claude 3 Opus: claude-3-opus-20240229
   - Claude 3 Sonnet: claude-3-sonnet-20240229
   - Claude 3 Haiku: claude-3-haiku-20240307
 
-deepinfra_model(self):
+deepinfra_platform:
   - Meta Llama 3 70B Instruct: meta-llama/Meta-Llama-3-70B-Instruct
   - Meta Llama 3 8B Instruct: meta-llama/Meta-Llama-3-8B-Instruct
   - Mixtral 8x22B Instruct v0.1: mistralai/Mixtral-8x22B-Instruct-v0.1
