@@ -24,7 +24,8 @@ class PlatformUtils:
         
         formatted_data = {}
         for key, value in data.items():
+            formatted_key = key.replace('_platform', '').capitalize()
             model_names = [list(item.keys())[0] for item in value]
-            formatted_data[key.split('(')[0]] = model_names
+            formatted_data[formatted_key.split('(')[0]] = model_names
 
         return formatted_data
