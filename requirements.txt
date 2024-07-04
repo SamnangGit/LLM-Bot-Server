@@ -16,4 +16,5 @@ python-dotenv==1.0.1
 uvicorn==0.29.0
 PyYAML==6.0.1
 
-transformers==4.42.0 
+# transformers==4.42.0 
+# fastapi-cors==0.0.6

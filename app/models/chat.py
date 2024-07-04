@@ -6,37 +6,20 @@ from langchain_anthropic import ChatAnthropic
 
 from langchain.prompts import PromptTemplate
 
-from transformers import AutoTokenizer
-
 from configs.config import safety_settings, generation_settings
 from schemas.chat import Message
 import os
 from dotenv import load_dotenv
 
-import yaml
-from yaml import SafeLoader
+from utils.platform_util import PlatformUtils
 
 load_dotenv()
 
 class GenerativeModel:
 
     def __init__(self):
+        self.platform_utils = PlatformUtils()
         self.chat = None
-
-    def load_yaml_and_get_model(self, model_name):
-        with open('../app/configs/llm_platform.yaml') as f:
-            data = yaml.load(f, Loader=SafeLoader)
-        model_code, parent = self.get_model_code_and_parent(model_name, data)
-
-        return model_code, parent
-
-    def get_model_code_and_parent(self, model_name, data):
-        for parent, models in data.items():
-            for model in models:
-                if model_name in model:
-                    return model[model_name], parent
-        return None, None
-
 
     def gemini_model(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 
@@ -92,97 +75,30 @@ class GenerativeModel:
         return response
 
     def start_custom_chat(self, model, message: Message,  temperature, top_p, top_k):
-        # print(f"Model: {model}, Temperature: {temperature}, Top P: {top_p}, Top K: {top_k}")
-        model_code, parent = self.load_yaml_and_get_model(model)
+        model_code, parent = self.platform_utils.load_yaml_and_get_model(model)
         if model_code and parent:
-            # print(f"Model Code: {model_code}, Parent: {parent}")
             parent = parent.replace('(self)', '').strip()
-            # print(f"Model Code: {model_code}, Parent: {parent}")
             self.chat = getattr(self, parent)(model_code, temperature)
         else:
             return {"error": "Model not found"}, 400
         try:
             response = self.chat.invoke(message)
         except Exception as e:
-            return {"error": str(e)}   
-
-        try:
-             format_response = self.standardize_response(model_code, parent, response)
-        except Exception as e:
-            return {"error": str(e)}     
-        return format_response
+            return {"error": str(e)}      
+        return response, parent, model_code
     
 
-    def standardize_response(self, model_code, parent, response):
-        # print(f"Parent in standard: {parent}")
-        # print(f"Response: {response}")
-        if parent == "groq_model":
-            standardized_response = {
-                "content": response.content,
-                "response_metadata": {
-                    "token_usage": {
-                        "completion_tokens": response.response_metadata['token_usage']['completion_tokens'],
-                        "prompt_tokens": response.response_metadata['token_usage']['prompt_tokens'],
-                        "total_tokens": response.response_metadata['token_usage']['total_tokens']
-                    },
-                    "model_name": model_code,
-                }
-            }
-            return standardized_response
-        elif parent == "deepinfra_model":
-                standardized_response = {
-                    "content": response,
-                    "count": self.count_tokens(response, model_code),
-                    "response_metadata": {
-                        "token_usage": {
-                            "completion_tokens": 0,
-                            "prompt_tokens": 0,
-                            "total_tokens": 0
-                        },
-                        "model_name": model_code,
-                    }
-                }
-                return standardized_response
-        elif parent == "anthropic_model":
-            response = response['response']
-        elif parent == "openai_model":
-                standardized_response = {
-                    "content": response,
-                    "response_metadata": {
-                        "token_usage": {
-                            "completion_tokens": 0,
-                            "prompt_tokens": 0,
-                            "total_tokens": 0
-                        },
-                        "model_name": model_code,
-                    }
-                }
-                return standardized_response
-        elif parent == "gemini_model":
-                standardized_response = {
-                    "content": response.content,
-                    "response_metadata": {
-                        "token_usage": {
-                            "completion_tokens": 0,
-                            "prompt_tokens": 0,
-                            "total_tokens": 0
-                        },
-                        "model_name": model_code,
-                    }
-                }
-                return standardized_response
-        else:
-            response = response['response']
 
 
-    def count_tokens(self, response_text, model_code):
-        tokenizer = AutoTokenizer.from_pretrained(model_code)  
+# Not working, error with hugging face tokenization
+    # def count_tokens(self, response_text, model_code):
+    #     tokenizer = AutoTokenizer.from_pretrained(model_code)  
 
-        # input_tokens = tokenizer.tokenize(input_text)
-        output_tokens = tokenizer.tokenize(response_text)
+    #     # input_tokens = tokenizer.tokenize(input_text)
+    #     output_tokens = tokenizer.tokenize(response_text)
 
-        return {
-            # "input_tokens": len(input_tokens),
-            "output_tokens": len(output_tokens),
-            # "total_tokens": len(input_tokens) + len(output_tokens)
-        }
+    #     return {
+    #         # "input_tokens": len(input_tokens),
+    #         "output_tokens": len(output_tokens),
+    #         # "total_tokens": len(input_tokens) + len(output_tokens)
+    #     }

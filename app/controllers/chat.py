@@ -11,19 +11,6 @@ class ChatController:
         return response
     
 
-    # def start_custom_chat(self, data: dict):
-    #     model = data.get("model")
-    #     message = data.get("message")
-    #     temperature = data.get("temperature")
-    #     top_p = data.get("top_p")
-    #     top_k = data.get("top_k")
-        
-    #     if not message:
-    #         return {"error": "Message content is required"}, 400
-        
-    #     content, token_usage, model_name = self.model.start_custom_chat(model, message, temperature, top_p, top_k)
-    #     return self.format_response(content, token_usage, model_name)
-
 
     def start_custom_chat(self, data):
         model = data.get("model")
@@ -31,18 +18,69 @@ class ChatController:
         temperature = data.get("temperature")
         top_p = data.get("top_p")
         top_k = data.get("top_k")
-        response = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
-        return response
-
-
-
+        response, parent, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
+        try:
+            formatted_response = self.standardize_response(model_code, parent, response)
+        except Exception as e:
+            return {"error": str(e)}
+        return formatted_response
     
 
-    def format_response(self, content, token_usage, model_name):
-        return {
-            "content": content,
-            "response_metadata": {
-                "token_usage": token_usage,
-                "model_name": model_name
+    def standardize_response(self, model_code, parent, response):
+        if parent == "groq_model":
+            standardized_response = {
+                "content": response.content,
+                "response_metadata": {
+                    "token_usage": {
+                        "completion_tokens": response.response_metadata['token_usage']['completion_tokens'],
+                        "prompt_tokens": response.response_metadata['token_usage']['prompt_tokens'],
+                        "total_tokens": response.response_metadata['token_usage']['total_tokens']
+                    },
+                    "model_name": model_code,
+                }
             }
-        }
+            return standardized_response
+        elif parent == "deepinfra_model":
+                standardized_response = {
+                    "content": response,
+                    "response_metadata": {
+                        "token_usage": {
+                            "completion_tokens": 0,
+                            "prompt_tokens": 0,
+                            "total_tokens": 0
+                        },
+                        "model_name": model_code,
+                    }
+                }
+                return standardized_response
+        elif parent == "anthropic_model":
+            response = response['response']
+        elif parent == "openai_model":
+                standardized_response = {
+                    "content": response,
+                    "response_metadata": {
+                        "token_usage": {
+                            "completion_tokens": 0,
+                            "prompt_tokens": 0,
+                            "total_tokens": 0
+                        },
+                        "model_name": model_code,
+                    }
+                }
+                return standardized_response
+        elif parent == "gemini_model":
+                standardized_response = {
+                    "content": response.content,
+                    "response_metadata": {
+                        "token_usage": {
+                            "completion_tokens": 0,
+                            "prompt_tokens": 0,
+                            "total_tokens": 0
+                        },
+                        "model_name": model_code,
+                    }
+                }
+                return standardized_response
+        else:
+            response = response['response']
+
