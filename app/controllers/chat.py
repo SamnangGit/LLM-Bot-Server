@@ -20,8 +20,8 @@ class ChatController:
         temperature = data.get("temperature")
         top_p = data.get("top_p")
         top_k = data.get("top_k")
-        response, platform, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
         try:
+            response, platform, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
             formatted_response = self.standardize_response(model_code, platform, response)
         except Exception as e:
             return {"error": str(e)}
@@ -83,6 +83,20 @@ class ChatController:
                     }
                 }
                 return standardized_response
+        elif platform == "ollama_platform":
+            standardized_response = {
+                "content": response,
+                "response_metadata": {
+                    "token_usage": {
+                        "completion_tokens": 0,
+                        "prompt_tokens": 0,
+                        "total_tokens": 0
+                    },
+                    "model_name": model_code,
+                }
+                    
+            }
+            return standardized_response
         else:
             response = response['response']
 

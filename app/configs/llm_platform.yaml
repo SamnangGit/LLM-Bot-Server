@@ -25,3 +25,6 @@ deepinfra_platform:
   - WizardLM 2 7B: microsoft/WizardLM-2-7B
   - Gemma 1.1 7B IT: google/gemma-1.1-7b-it
   - Airoboros 70B: deepinfra/airoboros-70b
+
+ollama_platform:
+  - Phi 3: phi3

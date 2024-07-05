@@ -1,7 +1,7 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI, OpenAI
 from langchain_groq import ChatGroq
-from langchain_community.llms import DeepInfra
+from langchain_community.llms import DeepInfra, Ollama
 from langchain_anthropic import ChatAnthropic
 
 from langchain.prompts import PromptTemplate
@@ -69,6 +69,12 @@ class GenerativeModel:
     def anthropic_platform(self, model_code):
         llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"), temperature=generation_settings['temperature'])
         return llm
+    
+    def ollama_platform(self, model_code, temperature=0.5):
+        llm = Ollama(model=model_code, temperature=temperature)
+        return llm
+        
+
 
     def start_chat(self, message: Message):
         response = self.chat.invoke(message)
