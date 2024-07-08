@@ -103,5 +103,4 @@ class ChatController:
 
     def get_llm_platforms(self):
         return self.platform_util.get_llm_platforms()
-        
-        
+    

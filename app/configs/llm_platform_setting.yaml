@@ -1,0 +1,17 @@
+Temperature:
+  - gemini_platform
+  - openai_platform
+  - groq_platform
+  - anthropic_platform
+  - deepinfra_platform
+  - ollama_platform
+
+Top_P:
+  - gemini_platform
+  - openai_platform
+  - anthropic_platform
+  - deepinfra_platform
+
+Top_K:
+  - gemini_platform
+  - anthropic_platform

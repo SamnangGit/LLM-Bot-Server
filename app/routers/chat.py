@@ -35,8 +35,5 @@ async def send_custom_chat_message(request: Request):
 @router.get("/platforms")
 async def get_platforms():
     platforms = chat_controller.get_llm_platforms()
-    # log platform
-    # print(platforms)
-
-
     return platforms
+

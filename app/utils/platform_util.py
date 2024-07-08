@@ -27,5 +27,15 @@ class PlatformUtils:
             formatted_key = key.replace('_platform', '').capitalize()
             model_names = [list(item.keys())[0] for item in value]
             formatted_data[formatted_key.split('(')[0]] = model_names
+            llm_platform_setting = self.get_platform_setting()
+        return {
+            "platforms": formatted_data,
+            "platform_settings": llm_platform_setting
+        }
+    
 
-        return formatted_data
+    def get_platform_setting(self):
+        with open('../app/configs/llm_platform_setting.yaml') as f:
+            data = yaml.load(f, Loader=SafeLoader)
+        # return it as json
+        return data
