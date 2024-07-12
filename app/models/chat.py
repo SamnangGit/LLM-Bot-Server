@@ -66,8 +66,8 @@ class GenerativeModel:
         return llm
     
 
-    def anthropic_platform(self, model_code):
-        llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"), temperature=generation_settings['temperature'])
+    def anthropic_platform(self, model_code, temperature=0.5):
+        llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"), temperature=temperature)
         return llm
     
     def ollama_platform(self, model_code, temperature=0.5):

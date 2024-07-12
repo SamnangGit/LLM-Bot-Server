@@ -56,7 +56,18 @@ class ChatController:
                 }
                 return standardized_response
         elif platform == "anthropic_platform":
-            response = response['response'],
+                standardized_response = {
+                    "content": response.content,
+                    "response_metadata": {
+                        "token_usage": {
+                            "completion_tokens": response.response_metadata["usage"]["output_tokens"],
+                            "prompt_tokens": response.response_metadata["usage"]["input_tokens"],
+                            "total_tokens": response.response_metadata["usage"]["input_tokens"] + response.response_metadata["usage"]["output_tokens"]
+                        },
+                        "model_name": model_code,
+                    }
+                }
+                return standardized_response
         elif platform == "openai_platform":
                 standardized_response = {
                     "content": response,

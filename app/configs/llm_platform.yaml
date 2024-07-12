@@ -2,6 +2,8 @@ gemini_platform:
   - Gemini 1.5 Pro: gemini-1.5-pro
   - Gemini 1.5 Flash: gemini-1.5-flash
   - Gemini 1.0 Pro: gemini-1.0-pro
+  # - Gemma 2 9B: gemma-2-9b-it
+  # - Gemma 2 27B: gemma-2-27b-it
 
 openai_platform:
   - GPT 3.5 Turbo: gpt-3.5-turbo-instruct
