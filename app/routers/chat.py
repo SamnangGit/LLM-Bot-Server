@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException
+from fastapi.responses import StreamingResponse
 from controllers.chat import ChatController
 
 router = APIRouter()
@@ -37,3 +38,19 @@ async def get_platforms():
     platforms = chat_controller.get_llm_platforms()
     return platforms
 
+
+@router.post("/stream_chat")
+async def stream_chat(request: Request):
+    if request.headers.get('Content-Type') != 'application/json':
+        raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
+    try:
+        data = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid JSON format")
+    
+    try:
+        generator = await chat_controller.stream_chat(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    return StreamingResponse(generator, media_type="text/event-stream")

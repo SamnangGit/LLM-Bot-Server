@@ -1,3 +1,4 @@
+from fastapi.responses import StreamingResponse
 from models.chat import GenerativeModel
 from schemas.chat import Message
 from utils.platform_util import PlatformUtils
@@ -115,3 +116,19 @@ class ChatController:
     def get_llm_platforms(self):
         return self.platform_util.get_llm_platforms()
     
+
+    async def stream_chat(self, data):
+        model = data.get("model")
+        messages_data = data.get("messages")
+        temperature = data.get("temperature")
+        top_p = data.get("top_p")
+        top_k = data.get("top_k")
+        
+        messages = messages_data
+        
+        try:
+            generator = self.model.start_chat_stream(model, messages, temperature, top_p, top_k)
+        except Exception as e:
+            raise Exception(f"Error in starting chat stream: {e}")
+        
+        return generator

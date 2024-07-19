@@ -1,3 +1,6 @@
+import asyncio
+import ssl
+from typing import AsyncIterable
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI, OpenAI
 from langchain_groq import ChatGroq
@@ -11,7 +14,11 @@ from schemas.chat import Message
 import os
 from dotenv import load_dotenv
 
+from langchain.callbacks import AsyncIteratorCallbackHandler
+
 from utils.platform_util import PlatformUtils
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 load_dotenv()
 
@@ -20,6 +27,23 @@ class GenerativeModel:
     def __init__(self):
         self.platform_utils = PlatformUtils()
         self.chat = None
+    #     self.queue = asyncio.Queue()
+    #     self.done = asyncio.Event()
+    #     async def aiter(self):
+    #         while True:
+    #             if self.done.is_set() and self.queue.empty():
+    #                 break
+    #             try:
+    #                 token = await asyncio.wait_for(self.queue.get(), timeout=0.1)
+    #                 yield token
+    #             except asyncio.TimeoutError:
+    #                 continue
+
+    # def add_token(self, token: str):
+    #     self.queue.put_nowait(token)
+
+    # def set_done(self):
+    #     self.done.set()
 
     def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 
@@ -28,7 +52,9 @@ class GenerativeModel:
                                       temperature=temperature,
                                       top_p=generation_settings['top_p'],
                                       top_k=generation_settings['top_k'],
-                                      stream=False)    
+                                      streaming=True,
+                                      verbose=True,
+                                      )    
         return llm  
 
     def openai_platform(self, model_code, temperature):
@@ -44,7 +70,7 @@ class GenerativeModel:
         #             streaming=False)
 
         llm = OpenAI(model=model_code, openai_api_key=os.getenv("OPENAI_API_KEY"),
-                     temperature=temperature)
+                     temperature=temperature, streaming=True)
         llm_chain = prompt | llm
 
         return llm_chain
@@ -54,6 +80,7 @@ class GenerativeModel:
         llm = ChatGroq(model=model_code, api_key=os.getenv("GROQ_API_KEY"),
                         temperature=temperature)
         print(f"Model: {model_code}, Temperature: {temperature}")
+        # stream=True
         return llm
     
 
@@ -68,6 +95,7 @@ class GenerativeModel:
 
     def anthropic_platform(self, model_code, temperature=0.5):
         llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"), temperature=temperature)
+        # , streaming=True
         return llm
     
     def ollama_platform(self, model_code, temperature=0.5):
@@ -93,7 +121,23 @@ class GenerativeModel:
         return response, platform, model_code
     
 
+    async def start_chat_stream(self, model: str, message, temperature: float, top_p: float, top_k: int) -> AsyncIterable[str]:
+        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+        self.chat = getattr(self, platform)(model_code, temperature)
+        print(self.chat)
+        print(f"Model: {model_code}, Platform: {platform}")
+        
+        stream = self.chat.astream(message)
 
+        try:
+            async for chunk in stream:
+                yield chunk.content
+                # yield chunk
+                # print(f"Yielding chunk: {chunk.content}")
+        except Exception as e:
+            print(f"Caught exception: {e}")
+        finally:
+            print("Stream completed")
 
 # Not working, error with hugging face tokenization
     # def count_tokens(self, response_text, model_code):
