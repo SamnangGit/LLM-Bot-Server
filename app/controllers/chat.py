@@ -21,23 +21,23 @@ class ChatController:
         temperature = data.get("temperature")
         top_p = data.get("top_p")
         top_k = data.get("top_k")
-        try:
-            response, platform, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
-            formatted_response = self.standardize_response(model_code, platform, response)
-        except Exception as e:
-            return {"error": str(e)}
+        # try:
+        response, platform, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
+        formatted_response = self.standardize_response(model_code, platform, response)
+        # except Exception as e:
+        #     return {"error": str(e)}
         return formatted_response
     
 
     def standardize_response(self, model_code, platform, response):
         if platform == "groq_platform":
             standardized_response = {
-                "content": response.content,
+                "content": response,
                 "response_metadata": {
                     "token_usage": {
-                        "completion_tokens": response.response_metadata['token_usage']['completion_tokens'],
-                        "prompt_tokens": response.response_metadata['token_usage']['prompt_tokens'],
-                        "total_tokens": response.response_metadata['token_usage']['total_tokens']
+                        "completion_tokens": 0,
+                        "prompt_tokens": 0,
+                        "total_tokens": 0
                     },
                     "model_name": model_code,
                 }
@@ -83,8 +83,19 @@ class ChatController:
                 }
                 return standardized_response
         elif platform == "gemini_platform":
+            ai_content = ""
+            start_marker = "AI: [{'role': 'assistant', 'content': "   
+            end_marker = "}"
+            # Find the start and end positions of the content in the string
+            start_pos = response.find(start_marker)
+            if start_pos != -1:
+                start_pos += len(start_marker)
+                end_pos = response.find(end_marker, start_pos)
+                if end_pos != -1:
+                    ai_content = response[start_pos + 1 : end_pos - 1]
+                    print('AI Content: ' + ai_content)
                 standardized_response = {
-                    "content": response.content,
+                    "content": ai_content,
                     "response_metadata": {
                         "token_usage": {
                             "completion_tokens": 0,

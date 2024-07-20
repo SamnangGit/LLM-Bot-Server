@@ -9,6 +9,9 @@ from langchain_anthropic import ChatAnthropic
 
 from langchain.prompts import PromptTemplate
 
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
+
 from configs.config import safety_settings, generation_settings
 from schemas.chat import Message
 import os
@@ -27,23 +30,7 @@ class GenerativeModel:
     def __init__(self):
         self.platform_utils = PlatformUtils()
         self.chat = None
-    #     self.queue = asyncio.Queue()
-    #     self.done = asyncio.Event()
-    #     async def aiter(self):
-    #         while True:
-    #             if self.done.is_set() and self.queue.empty():
-    #                 break
-    #             try:
-    #                 token = await asyncio.wait_for(self.queue.get(), timeout=0.1)
-    #                 yield token
-    #             except asyncio.TimeoutError:
-    #                 continue
-
-    # def add_token(self, token: str):
-    #     self.queue.put_nowait(token)
-
-    # def set_done(self):
-    #     self.done.set()
+        self.memory = ConversationBufferMemory()
 
     def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 
@@ -108,17 +95,21 @@ class GenerativeModel:
         response = self.chat.invoke(message)
         return response
 
-    def start_custom_chat(self, model, message: Message,  temperature, top_p, top_k):
-        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
-        if model_code and platform:
-            self.chat = getattr(self, platform)(model_code, temperature)
-        else:
-            return {"error": "Model not found"}, 400
-        try:
-            response = self.chat.invoke(message)
-        except Exception as e:
-            return {"error": str(e)}      
-        return response, platform, model_code
+    def start_custom_chat(self, model, message: Message, temperature, top_p, top_k):
+            model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+            if model_code and platform:
+                llm = getattr(self, platform)(model_code, temperature)
+                self.chat = ConversationChain(llm=llm, memory=self.memory)
+            else:
+                return {"error": "Model not found"}, 400
+
+            try:
+                response = self.chat.predict(input=message)
+                print(f"Response: {response}")
+            except Exception as e:
+                return {"error": str(e)}
+
+            return response, platform, model_code
     
 
     async def start_chat_stream(self, model: str, message, temperature: float, top_p: float, top_k: int) -> AsyncIterable[str]:
