@@ -115,30 +115,20 @@ class GenerativeModel:
     async def start_chat_stream(self, model: str, message, temperature: float, top_p: float, top_k: int) -> AsyncIterable[str]:
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
         self.chat = getattr(self, platform)(model_code, temperature)
-        print(self.chat)
-        print(f"Model: {model_code}, Platform: {platform}")
-        
+        # print(self.chat)
+        # print(f"Model: {model_code}, Platform: {platform}")
+        ai_msg = "";
         stream = self.chat.astream(message)
 
         try:
             async for chunk in stream:
                 yield chunk.content
-                # yield chunk
                 # print(f"Yielding chunk: {chunk.content}")
+                # yield chunk
+                ai_msg += chunk.content
         except Exception as e:
             print(f"Caught exception: {e}")
         finally:
+            # print ai_msg here
+            print(f"AI Message: {ai_msg}")
             print("Stream completed")
-
-# Not working, error with hugging face tokenization
-    # def count_tokens(self, response_text, model_code):
-    #     tokenizer = AutoTokenizer.from_pretrained(model_code)  
-
-    #     # input_tokens = tokenizer.tokenize(input_text)
-    #     output_tokens = tokenizer.tokenize(response_text)
-
-    #     return {
-    #         # "input_tokens": len(input_tokens),
-    #         "output_tokens": len(output_tokens),
-    #         # "total_tokens": len(input_tokens) + len(output_tokens)
-    #     }
