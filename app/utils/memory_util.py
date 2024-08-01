@@ -6,8 +6,7 @@ from datetime import datetime
 from langchain_community.chat_message_histories import (
     UpstashRedisChatMessageHistory,
 )
-from langchain_core.language_models.base import BaseLanguageModel
-from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory, ConversationSummaryMemory, ConversationSummaryBufferMemory
+from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory, ConversationTokenBufferMemory, ConversationSummaryMemory, ConversationSummaryBufferMemory
 from langchain_community.llms import Ollama
 
 load_dotenv()
@@ -43,6 +42,16 @@ class MemoryUtils:
         memory = ConversationBufferWindowMemory(
             chat_memory=self.init_upstash(),
             k=1,
+            return_messages=True,
+        )
+        return memory
+    
+    # seems like there is an error of max_token_limit in ollama
+    def init_token_buffer_memory(self):
+        memory = ConversationTokenBufferMemory(
+            llm=self.init_ollama(),
+            chat_memory=self.init_upstash(),
+            max_token_limit=25,
             return_messages=True,
         )
         return memory
