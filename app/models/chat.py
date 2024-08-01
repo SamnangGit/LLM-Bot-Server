@@ -1,55 +1,36 @@
 import asyncio
 import ssl
-from datetime import datetime
-
+import os
+from dotenv import load_dotenv
 from typing import AsyncIterable
+
+from configs.config import safety_settings, generation_settings
+from schemas.chat import Message
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI, OpenAI
 from langchain_groq import ChatGroq
 from langchain_community.llms import DeepInfra, Ollama
 from langchain_anthropic import ChatAnthropic
 
-from langchain_community.chat_message_histories import (
-    UpstashRedisChatMessageHistory,
-)
-
 from langchain.prompts import PromptTemplate
-
-from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
-
-from configs.config import safety_settings, generation_settings
-from schemas.chat import Message
-import os
-from dotenv import load_dotenv
-
 from langchain.callbacks import AsyncIteratorCallbackHandler
 
 from utils.platform_util import PlatformUtils
+from utils.memory_util import MemoryUtils
 
 ssl._create_default_https_context = ssl._create_unverified_context
-
 load_dotenv()
 
 class GenerativeModel:
 
     def __init__(self):
         self.platform_utils = PlatformUtils()
+        self.memory_util = MemoryUtils()
         self.chat = None
 
-        # initialize redis
-        redis_url = os.getenv("REDIS_URL")
-        redis_token = os.getenv("REDIS_TOKEN")
-
-
-        history = UpstashRedisChatMessageHistory(
-            url=redis_url, token=redis_token, ttl=0, session_id=self.generate_session_id()
-        )
-
-        self.memory = ConversationBufferMemory(
-            chat_memory=history,
-            return_messages=True,
-        )
+        self.memory = self.memory_util.init_buffer_memory()
 
     def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 
@@ -156,10 +137,3 @@ class GenerativeModel:
             # print ai_msg here
             print(f"AI Message: {ai_msg}")
             print("Stream completed")
-
-
-    def generate_session_id(self):
-        date = datetime.now()
-        timestamp = date.strftime("%Y%m%d")
-        sequence = str(date.hour * 3600 + date.minute * 60 + date.second).zfill(5)
-        return f"{timestamp}-{sequence}"

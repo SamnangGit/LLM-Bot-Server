@@ -1,8 +1,38 @@
-class MemoryUtil:
+import os
+from dotenv import load_dotenv
+from datetime import datetime
 
-    def __init__(self):
-        pass
+
+from langchain_community.chat_message_histories import (
+    UpstashRedisChatMessageHistory,
+)
+from langchain.memory import ConversationBufferMemory
+
+load_dotenv()
+
+class MemoryUtils:
         
-    def initilaize_upstash(self):
-        pass    
+    def init_upstash(self):
+        redis_url = os.getenv("REDIS_URL")
+        redis_token = os.getenv("REDIS_TOKEN")
 
+
+        history = UpstashRedisChatMessageHistory(
+            url=redis_url, token=redis_token, ttl=0, session_id=self.generate_session_id()
+        )
+        return history    
+
+
+    def generate_session_id(self):
+        date = datetime.now()
+        timestamp = date.strftime("%Y%m%d")
+        sequence = str(date.hour * 3600 + date.minute * 60 + date.second).zfill(5)
+        return f"{timestamp}-{sequence}"
+    
+
+    def init_buffer_memory(self):
+        memory = ConversationBufferMemory(
+            chat_memory=self.init_upstash(),
+            return_messages=True,
+        )
+        return memory
