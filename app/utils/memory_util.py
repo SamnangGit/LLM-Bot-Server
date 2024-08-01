@@ -6,7 +6,9 @@ from datetime import datetime
 from langchain_community.chat_message_histories import (
     UpstashRedisChatMessageHistory,
 )
-from langchain.memory import ConversationBufferMemory
+from langchain_core.language_models.base import BaseLanguageModel
+from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
+from langchain_community.llms import Ollama
 
 load_dotenv()
 
@@ -36,3 +38,16 @@ class MemoryUtils:
             return_messages=True,
         )
         return memory
+    
+    def init_summary_memory(self):
+        memory = ConversationSummaryMemory(
+            llm=self.init_ollama_model(),
+            chat_memory=self.init_upstash(),
+            return_messages=True,
+        )
+        print('Here is memory: ')
+        return memory
+
+    def init_ollama_model(self):
+        llm = Ollama(model='llama3.1')
+        return llm

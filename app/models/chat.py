@@ -101,6 +101,8 @@ class GenerativeModel:
         if model_code and platform:
             llm = getattr(self, platform)(model_code, temperature)
             self.chat = ConversationChain(llm=llm, memory=self.memory)
+            print('Memory: ')
+            print(self.memory.load_memory_variables({}))
         else:
             return {"error": "Model not found"}, 400
 
