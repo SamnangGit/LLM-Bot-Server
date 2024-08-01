@@ -7,7 +7,7 @@ from langchain_community.chat_message_histories import (
     UpstashRedisChatMessageHistory,
 )
 from langchain_core.language_models.base import BaseLanguageModel
-from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory, ConversationSummaryBufferMemory
+from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory, ConversationSummaryMemory, ConversationSummaryBufferMemory
 from langchain_community.llms import Ollama
 
 load_dotenv()
@@ -39,9 +39,17 @@ class MemoryUtils:
         )
         return memory
     
+    def init_buffer_window_memory(self):
+        memory = ConversationBufferWindowMemory(
+            chat_memory=self.init_upstash(),
+            k=1,
+            return_messages=True,
+        )
+        return memory
+    
     def init_summary_memory(self):
         memory = ConversationSummaryMemory(
-            llm=self.init_ollama_model(),
+            llm=self.init_ollama(),
             chat_memory=self.init_upstash(),
             return_messages=True,
         )
