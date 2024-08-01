@@ -9,9 +9,11 @@ openai_platform:
   - GPT 3.5 Turbo: gpt-3.5-turbo-instruct
 
 groq_platform:
-  - Gemma 7B IT: gemma-7b-it
+  - Llama 3.1 70B: llama-3.1-70b-versatile
+  - Llama 3.1 8B: llama-3.1-8b-instant
   - Llama3 70B 8192: llama3-70b-8192
   - Llama3 8B 8192: llama3-8b-8192
+  - Gemma 7B IT: gemma-7b-it
   - Mixtral 8x7B 32768: mixtral-8x7b-32768
 
 anthropic_platform:
@@ -31,3 +33,4 @@ deepinfra_platform:
 
 ollama_platform:
   - Phi 3: phi3
+  - Llama 3.1 8B: llama3.1
