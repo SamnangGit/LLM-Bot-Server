@@ -19,6 +19,7 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 
 from utils.platform_util import PlatformUtils
 from utils.memory_util import MemoryUtils
+from utils.session_util import SessionUtils
 
 ssl._create_default_https_context = ssl._create_unverified_context
 load_dotenv()
@@ -31,6 +32,7 @@ class GenerativeModel:
         self.chat = None
 
         self.memory = self.memory_util.init_token_buffer_memory()
+        print(SessionUtils().generate_session_id())
 
     def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 

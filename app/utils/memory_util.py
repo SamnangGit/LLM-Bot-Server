@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 from langchain_community.chat_message_histories import (
-    UpstashRedisChatMessageHistory,
+    UpstashRedisChatMessageHistory, RedisChatMessageHistory
 )
 from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory, ConversationTokenBufferMemory, ConversationSummaryMemory, ConversationSummaryBufferMemory
 from langchain_community.llms import Ollama
@@ -14,14 +14,20 @@ load_dotenv()
 class MemoryUtils:
         
     def init_upstash(self):
-        redis_url = os.getenv("REDIS_URL")
-        redis_token = os.getenv("REDIS_TOKEN")
+        upstash_redis_url = os.getenv("UPSTASH_REDIS_URL")
+        upstash_redis_token = os.getenv("UPSTASH_REDIS_TOKEN")
 
 
         history = UpstashRedisChatMessageHistory(
-            url=redis_url, token=redis_token, ttl=0, session_id=self.generate_session_id()
+            url=upstash_redis_url, token=upstash_redis_token, ttl=0, session_id=self.generate_session_id()
         )
         return history    
+
+
+    def init_redis(self):
+        redis_url = os.getenv("REDIS_URL")
+        history = RedisChatMessageHistory(url=redis_url, ttl=0, session_id=self.generate_session_id)
+        return history
 
 
     def generate_session_id(self):
@@ -52,7 +58,7 @@ class MemoryUtils:
             llm=self.init_ollama(),
             chat_memory=self.init_upstash(),
             max_token_limit=25,
-            return_messages=True,
+            return_messages=False,
         )
         return memory
     
