@@ -32,7 +32,7 @@ class GenerativeModel:
         self.chat = None
 
         self.memory = self.memory_util.init_token_buffer_memory()
-        print(SessionUtils().generate_session_id())
+        # print(SessionUtils().generate_session_id())
 
     def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 

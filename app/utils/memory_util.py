@@ -9,6 +9,8 @@ from langchain_community.chat_message_histories import (
 from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory, ConversationTokenBufferMemory, ConversationSummaryMemory, ConversationSummaryBufferMemory
 from langchain_community.llms import Ollama
 
+from utils.session_util import SessionUtils
+
 load_dotenv()
 
 class MemoryUtils:
@@ -19,7 +21,7 @@ class MemoryUtils:
 
 
         history = UpstashRedisChatMessageHistory(
-            url=upstash_redis_url, token=upstash_redis_token, ttl=0, session_id=self.generate_session_id()
+            url=upstash_redis_url, token=upstash_redis_token, ttl=0, session_id=SessionUtils.generate_session_id()
         )
         return history    
 
@@ -30,11 +32,11 @@ class MemoryUtils:
         return history
 
 
-    def generate_session_id(self):
-        date = datetime.now()
-        timestamp = date.strftime("%Y%m%d")
-        sequence = str(date.hour * 3600 + date.minute * 60 + date.second).zfill(5)
-        return f"{timestamp}-{sequence}"
+    # def generate_session_id(self):
+    #     date = datetime.now()
+    #     timestamp = date.strftime("%Y%m%d")
+    #     sequence = str(date.hour * 3600 + date.minute * 60 + date.second).zfill(5)
+    #     return f"{timestamp}-{sequence}"
     
 
     def init_buffer_memory(self):
@@ -83,3 +85,4 @@ class MemoryUtils:
     def init_ollama(self):
         llm = Ollama(model='llama3.1')
         return llm
+    

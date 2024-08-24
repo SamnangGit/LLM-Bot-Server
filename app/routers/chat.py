@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi.responses import StreamingResponse
 from controllers.chat import ChatController
+from utils.session_util import SessionUtils
 
 router = APIRouter()
 chat_controller = ChatController()
@@ -20,17 +21,30 @@ async def send_chat_message(request: Request):
     return {"response": response}
 
 
-
 @router.post("/chat/custom")
-async def send_custom_chat_message(request: Request):
+async def send_custom_chat_message(request: Request, response: Response):
+    # Check Content-Type header
     if request.headers.get('Content-Type') != 'application/json':
         raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
+    
+    # Parse JSON body
     try:
         data = await request.json()
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON format")
-    response = chat_controller.start_custom_chat(data)
-    return {"response": response}
+    
+    response.set_cookie(
+        key="uuid",
+        value=SessionUtils.generate_session_id(),
+        max_age=86400,  # Cookie expires in 1 day
+        httponly=True,
+        samesite="None",  # Allow cross-site cookies
+        secure=False,  # Only send cookie over HTTPS if True
+    )
+    
+    response_data = chat_controller.start_custom_chat(data)
+    return {"response": response_data}
+
 
 
 @router.get("/platforms")

@@ -4,6 +4,9 @@ from models.chat import GenerativeModel
 from schemas.chat import Message
 from utils.platform_util import PlatformUtils
 
+import json
+import re
+
 class ChatController:
     def __init__(self):
         self.platform_util = PlatformUtils()
@@ -84,33 +87,8 @@ class ChatController:
                 }
                 return standardized_response
         elif platform == "gemini_platform":
-            # ai_content = ""
-            # start_marker = "AI: [{'role': 'assistant', 'content': "   
-            # end_marker = "}"
-            # # Find the start and end positions of the content in the string
-            # start_pos = response.find(start_marker)
-            # if start_pos != -1:
-            #     start_pos += len(start_marker)
-            #     end_pos = response.find(end_marker, start_pos)
-            #     if end_pos != -1:
-            #         ai_content = response[start_pos + 1 : end_pos - 1]
-            #         print('AI Content: ' + ai_content)
-            #     standardized_response = {
-            #         "content": ai_content,
-            #         "response_metadata": {
-            #             "token_usage": {
-            #                 "completion_tokens": 0,
-            #                 "prompt_tokens": 0,
-            #                 "total_tokens": 0
-            #             },
-            #             "model_name": model_code,
-            #         }
-            #     }
-            print('Response Type: ' + str(type(response)))
-            # list_of_dicts = ast.literal_eval(response)
-            # print('List of Dicts: ' + str(type(list_of_dicts)))
             standardized_response = {
-                "content": response,
+                "content": self.parse_chat_messages(response),
                 "response_metadata": {
                     "token_usage": {
                         "completion_tokens": 0,
@@ -158,3 +136,20 @@ class ChatController:
             raise Exception(f"Error in starting chat stream: {e}")
         
         return generator
+
+
+
+
+    def parse_chat_messages(self, raw_string):
+        # Remove the prefix (Human: or AI:) and any leading/trailing whitespace
+        cleaned_string = re.sub(r'^(Human:|AI:)\s*', '', raw_string.strip())
+
+        try:
+            # Replace single quotes with double quotes to make it valid JSON
+            json_string = cleaned_string.replace("'", '"')
+            # Parse the JSON string
+            data = json.loads(json_string)
+            # Extract and return the content
+            return data[0]['content']
+        except (json.JSONDecodeError, IndexError, KeyError):
+            return "Error: Could not parse the message or extract content."
