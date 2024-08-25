@@ -26,29 +26,38 @@ async def send_custom_chat_message(request: Request, response: Response):
     # Check Content-Type header
     if request.headers.get('Content-Type') != 'application/json':
         raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
-    
-    # Parse JSON body
     try:
         data = await request.json()
+        uuid = SessionUtils.get_session_id(request)
+        if uuid is None:
+            response.set_cookie(
+                key="uuid",
+                value=SessionUtils.generate_session_id(),
+                max_age=86400,  # Cookie expires in 1 day
+                httponly=True,
+                samesite="None",  # Allow cross-site cookies
+                secure=False,  # Only send cookie over HTTPS if True
+            )
+        else:
+            print("uuid: " + uuid)   
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON format")
-    
-    response.set_cookie(
-        key="uuid",
-        value=SessionUtils.generate_session_id(),
-        max_age=86400,  # Cookie expires in 1 day
-        httponly=True,
-        samesite="None",  # Allow cross-site cookies
-        secure=False,  # Only send cookie over HTTPS if True
-    )
-    
+    print("cookies: " + str(SessionUtils.get_session_id(request)))
     response_data = chat_controller.start_custom_chat(data)
     return {"response": response_data}
 
 
 
 @router.get("/platforms")
-async def get_platforms():
+async def get_platforms(response: Response):
+    response.set_cookie(
+        key="uuid",
+        value=SessionUtils.generate_session_id(),
+        max_age=86400,
+        httponly=True,
+        samesite="None",
+        secure=False,
+    )
     platforms = chat_controller.get_llm_platforms()
     return platforms
 
