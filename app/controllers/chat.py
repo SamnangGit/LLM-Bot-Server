@@ -139,13 +139,45 @@ class ChatController:
 
 
 
+    async def stream_chat_memory(self, data):
+        model = data.get("model")
+        messages_data = data.get("messages")
+        temperature = data.get("temperature")
+        top_p = data.get("top_p")
+        top_k = data.get("top_k")
+        
+        messages = messages_data
+        
+        try:
+            generator = self.model.start_chat_stream_memory(model, messages, temperature, top_p, top_k)
+        except Exception as e:
+            raise Exception(f"Error in starting chat stream: {e}")
+        
+        return generator
+        
+
+
+    async def stream_chat_es(self, data):
+        model = data.get("model")
+        messages_data = data.get("messages")
+        temperature = data.get("temperature")
+        top_p = data.get("top_p")
+        top_k = data.get("top_k")
+        
+        messages = messages_data
+        
+        try:
+            generator = self.model.start_chat_stream_memory_es(model, messages, temperature, top_p, top_k)
+        except Exception as e:
+            raise Exception(f"Error in starting chat stream: {e}")
+        
+        return generator
 
     def parse_chat_messages(self, raw_string):
-        # Remove the prefix (Human: or AI:) and any leading/trailing whitespace
         cleaned_string = re.sub(r'^(Human:|AI:)\s*', '', raw_string.strip())
+        print("clean string: " + cleaned_string)
 
         try:
-            # Replace single quotes with double quotes to make it valid JSON
             json_string = cleaned_string.replace("'", '"')
             # Parse the JSON string
             data = json.loads(json_string)

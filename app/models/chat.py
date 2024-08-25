@@ -21,6 +21,15 @@ from utils.platform_util import PlatformUtils
 from utils.memory_util import MemoryUtils
 from utils.session_util import SessionUtils
 
+
+from typing import Any
+from queue import Queue
+from langchain.agents import AgentType, initialize_agent
+from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
+from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler
+from langchain.schema import LLMResult
+
+
 ssl._create_default_https_context = ssl._create_unverified_context
 load_dotenv()
 
@@ -30,9 +39,7 @@ class GenerativeModel:
         self.platform_utils = PlatformUtils()
         self.memory_util = MemoryUtils()
         self.chat = None
-
-        self.memory = self.memory_util.init_token_buffer_memory()
-        # print(SessionUtils().generate_session_id())
+        self.memory = self.memory_util.init_buffer_window_memory()
 
     def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 
@@ -48,20 +55,11 @@ class GenerativeModel:
 
     def openai_platform(self, model_code, temperature):
         template = """Question: {question}
-
         Answer: Let's think step by step."""
-
         prompt = PromptTemplate.from_template(template)
-            
-        # llm = ChatOpenAI(model="gpt-4o", openai_api_key=os.getenv("OPENAI_API_KEY"),
-        #              temperature=generation_settings['temperature'],
-        #              top_p=generation_settings['top_p'],
-        #             streaming=False)
-
         llm = OpenAI(model=model_code, openai_api_key=os.getenv("OPENAI_API_KEY"),
                      temperature=temperature, streaming=True)
         llm_chain = prompt | llm
-
         return llm_chain
     
 
@@ -98,7 +96,6 @@ class GenerativeModel:
         return response
 
     def start_custom_chat(self, model, message: Message, temperature, top_p, top_k):
-
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
         if model_code and platform:
             llm = getattr(self, platform)(model_code, temperature)
@@ -124,20 +121,94 @@ class GenerativeModel:
     async def start_chat_stream(self, model: str, message, temperature: float, top_p: float, top_k: int) -> AsyncIterable[str]:
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
         self.chat = getattr(self, platform)(model_code, temperature)
-        # print(self.chat)
-        # print(f"Model: {model_code}, Platform: {platform}")
         ai_msg = "";
         stream = self.chat.astream(message)
 
         try:
             async for chunk in stream:
                 yield chunk.content
-                # print(f"Yielding chunk: {chunk.content}")
-                # yield chunk
                 ai_msg += chunk.content
         except Exception as e:
             print(f"Caught exception: {e}")
         finally:
-            # print ai_msg here
             print(f"AI Message: {ai_msg}")
             print("Stream completed")
+
+
+    async def start_chat_stream_memory(self, model: str, message: str, temperature: float, top_p: float, top_k: int) -> Any:
+        # Load model configuration and initialize LLM
+        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+        llm = getattr(self, platform)(model_code, temperature)
+
+        # Initialize the agent with the loaded LLM and memory
+        agent = initialize_agent(
+            agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
+            tools=[],
+            llm=llm,
+            verbose=True,
+            max_iterations=3,
+            early_stopping_method="generate",
+            memory=self.memory,
+            return_intermediate_steps=False
+        )
+
+        # Define the asynchronous callback handler
+        class AsyncCallbackHandler(AsyncIteratorCallbackHandler):
+            content: str = ""
+            final_answer: bool = False
+
+            def __init__(self):
+                super().__init__()
+
+            async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
+                self.content += token
+                if self.final_answer:
+                    if '"action_input": "' in self.content:
+                        if token not in ['"', "}"]:
+                            self.queue.put_nowait(token)
+                elif "Final Answer" in self.content:
+                    self.final_answer = True
+                    self.content = ""
+
+            async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+                if self.final_answer:
+                    self.content = ""
+                    self.final_answer = False
+                    self.done.set()
+                else:
+                    self.content = ""
+
+        # Define the function to run the agent call asynchronously
+        async def run_call(message: str, stream_it: AsyncCallbackHandler):
+            # Assign callback handler to the agent's LLM
+            agent.agent.llm_chain.llm.callbacks = [stream_it]
+            await agent.acall(inputs={"input": message})
+
+        # Define the generator function to stream the response tokens
+        async def create_gen(message: str, stream_it: AsyncCallbackHandler):
+            task = asyncio.create_task(run_call(message, stream_it))
+            async for token in stream_it.aiter():
+                yield token
+            await task
+
+
+        # Initialize the callback handler and return the generator
+        # stream_it = AsyncCallbackHandler()
+        # return await create_gen(message, stream_it)   
+        create_gen(message, AsyncCallbackHandler())
+        
+
+
+    async def start_chat_stream_memory_es(self, model: str, message: str, temperature: float, top_p: float, top_k: int):
+        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+        llm = getattr(self, platform)(model_code, temperature)
+        self.chat = ConversationChain(llm=llm, memory=self.memory)
+        callback_handler = FinalStreamingStdOutCallbackHandler()
+
+
+        callback_handler = AsyncIteratorCallbackHandler()
+
+        run = asyncio.create_task(self.chat.arun(input=message))
+        async for token in callback_handler.aiter():
+            yield token
+        await run

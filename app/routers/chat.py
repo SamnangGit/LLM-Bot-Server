@@ -68,3 +68,21 @@ async def stream_chat(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
     
     return StreamingResponse(generator, media_type="text/event-stream")
+
+
+
+@router.post("/stream_chat_memory")
+async def stream_chat_memory(request: Request):
+    data = await request.json()
+    gen = await chat_controller.stream_chat_memory(data)
+    return StreamingResponse(gen, media_type="text/event-stream")
+
+
+@router.post("/stream_chat_es")
+async def stream_chat_es(request: Request):
+    data = await request.json()
+    gen = await chat_controller.stream_chat_es(data)
+    return StreamingResponse(
+            gen,
+            media_type="text/event-stream"
+        )
