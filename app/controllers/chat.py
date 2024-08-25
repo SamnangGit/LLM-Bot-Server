@@ -25,8 +25,9 @@ class ChatController:
         temperature = data.get("temperature")
         top_p = data.get("top_p")
         top_k = data.get("top_k")
+        uuid = data.get("uuid")
         # try:
-        response, platform, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k)
+        response, platform, model_code = self.model.start_custom_chat(model, messages, temperature, top_p, top_k, uuid)
         formatted_response = self.standardize_response(model_code, platform, response)
         # except Exception as e:
         #     return {"error": str(e)}

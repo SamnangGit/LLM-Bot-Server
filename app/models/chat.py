@@ -39,7 +39,7 @@ class GenerativeModel:
         self.platform_utils = PlatformUtils()
         self.memory_util = MemoryUtils()
         self.chat = None
-        self.memory = self.memory_util.init_buffer_window_memory()
+        # self.memory = self.memory_util.init_buffer_window_memory(uuid)
 
     def gemini_platform(self, model_code, temperature):
         llm = ChatGoogleGenerativeAI(model=model_code, 
@@ -95,13 +95,14 @@ class GenerativeModel:
         response = self.chat.invoke(message)
         return response
 
-    def start_custom_chat(self, model, message: Message, temperature, top_p, top_k):
+    def start_custom_chat(self, model, message: Message, temperature, top_p, top_k, uuid):
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
         if model_code and platform:
             llm = getattr(self, platform)(model_code, temperature)
-            self.chat = ConversationChain(llm=llm, memory=self.memory)
+            self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid)
+        )
             print('Memory: ')
-            print(self.memory.load_memory_variables({}))
+            # print(self.memory.load_memory_variables({}))
         else:
             return {"error": "Model not found"}, 400
 

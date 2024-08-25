@@ -15,13 +15,13 @@ load_dotenv()
 
 class MemoryUtils:
         
-    def init_upstash(self):
+    def init_upstash(self, uuid=None):
         upstash_redis_url = os.getenv("UPSTASH_REDIS_URL")
         upstash_redis_token = os.getenv("UPSTASH_REDIS_TOKEN")
 
 
         history = UpstashRedisChatMessageHistory(
-            url=upstash_redis_url, token=upstash_redis_token, ttl=0, session_id=SessionUtils.generate_session_id()
+            url=upstash_redis_url, token=upstash_redis_token, ttl=0, session_id=uuid
         )
         return history    
 
@@ -46,14 +46,15 @@ class MemoryUtils:
         )
         return memory
     
-    def init_buffer_window_memory(self):
+    def init_buffer_window_memory(self, uuid=None):
         memory = ConversationBufferWindowMemory(
             # memory_key="chat_memory",
-            chat_memory=self.init_upstash(),
+            chat_memory=self.init_upstash(uuid),
             k=5,
             return_messages=True,
             # output_key="output"
         )
+        print('Here is memory: ' + str(memory))
         return memory
     
     # seems like there is an error of max_token_limit in ollama
