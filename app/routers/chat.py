@@ -28,6 +28,7 @@ async def send_custom_chat_message(request: Request, response: Response):
         raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
     try:
         data = await request.json()
+        print("data: " + str(data))
         uuid = SessionUtils.get_session_id(request)
         if uuid is None:
             response.set_cookie(

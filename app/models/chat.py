@@ -41,29 +41,30 @@ class GenerativeModel:
         self.chat = None
         # self.memory = self.memory_util.init_buffer_window_memory(uuid)
 
-    def gemini_platform(self, model_code, temperature):
+    def gemini_platform(self, model_code, temperature, top_p, top_k):
         llm = ChatGoogleGenerativeAI(model=model_code, 
                                       google_api_key=os.getenv("GEMINI_API_KEY"),
                                       safety_settings=safety_settings,
                                       temperature=temperature,
-                                      top_p=generation_settings['top_p'],
-                                      top_k=generation_settings['top_k'],
+                                      top_p=top_p,
+                                      top_k=top_k,
                                       streaming=True,
                                       verbose=True,
                                       )    
         return llm  
 
-    def openai_platform(self, model_code, temperature):
+    def openai_platform(self, model_code, temperature, top_p, top_k):
         template = """Question: {question}
         Answer: Let's think step by step."""
         prompt = PromptTemplate.from_template(template)
         llm = OpenAI(model=model_code, openai_api_key=os.getenv("OPENAI_API_KEY"),
-                     temperature=temperature, streaming=True)
+                     temperature=temperature, top_p=top_p, streaming=True)
         llm_chain = prompt | llm
         return llm_chain
     
 
-    def groq_platform(self, model_code, temperature=0.5):
+    def groq_platform(self, model_code, temperature, top_p, top_k):
+        print(f"temperature: {temperature}")
         llm = ChatGroq(model=model_code, api_key=os.getenv("GROQ_API_KEY"),
                         temperature=temperature)
         print(f"Model: {model_code}, Temperature: {temperature}")
@@ -71,21 +72,21 @@ class GenerativeModel:
         return llm
     
 
-    def deepinfra_platform(self, model_code, temperature):
+    def deepinfra_platform(self, model_code, temperature, top_p, top_k):
         llm = DeepInfra(model_id=model_code, deepinfra_api_token=os.getenv("DEEPINFRA_API_TOKEN"),
                         model_kwargs = {"temperature": temperature, 
-                                        "top_p": generation_settings['top_p'],
-                                        # "top_k": generation_settings['top_k'],
+                                        "top_p": top_p,
                                         "repetition_penalty": 1.2})
         return llm
     
 
-    def anthropic_platform(self, model_code, temperature=0.5):
-        llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"), temperature=temperature)
+    def anthropic_platform(self, model_code, temperature, top_p, top_k):
+        llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"),
+                             temperature=temperature, top_p=top_p, top_k=top_k)
         # , streaming=True
         return llm
     
-    def ollama_platform(self, model_code, temperature=0.5):
+    def ollama_platform(self, model_code, temperature, top_p, top_k):
         llm = Ollama(model=model_code, temperature=temperature)
         return llm
         
@@ -98,7 +99,8 @@ class GenerativeModel:
     def start_custom_chat(self, model, message: Message, temperature, top_p, top_k, uuid):
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
         if model_code and platform:
-            llm = getattr(self, platform)(model_code, temperature)
+            print(f"Temperature: {temperature}, Top P: {top_p}, Top K: {top_k}")
+            llm = getattr(self, platform)(model_code, temperature, top_p, top_k)
             self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid)
         )
             print('Memory: ')
