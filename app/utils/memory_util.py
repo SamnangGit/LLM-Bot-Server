@@ -48,11 +48,11 @@ class MemoryUtils:
     
     def init_buffer_window_memory(self, uuid=None):
         memory = ConversationBufferWindowMemory(
-            # memory_key="chat_memory",
+            memory_key="chat_history",
             chat_memory=self.init_upstash(uuid),
             k=5,
             return_messages=True,
-            # output_key="output"
+            output_key="output"
         )
         print('Here is memory: ' + str(memory))
         return memory

@@ -49,7 +49,7 @@ class GenerativeModel:
                                       top_p=top_p,
                                       top_k=top_k,
                                       streaming=True,
-                                      verbose=True,
+                                    #   verbose=True,
                                       )    
         return llm  
 
@@ -66,7 +66,7 @@ class GenerativeModel:
     def groq_platform(self, model_code, temperature, top_p, top_k):
         print(f"temperature: {temperature}")
         llm = ChatGroq(model=model_code, api_key=os.getenv("GROQ_API_KEY"),
-                        temperature=temperature)
+                        temperature=temperature, streaming=True)
         print(f"Model: {model_code}, Temperature: {temperature}")
         # stream=True
         return llm
@@ -82,7 +82,7 @@ class GenerativeModel:
 
     def anthropic_platform(self, model_code, temperature, top_p, top_k):
         llm = ChatAnthropic(model_name=model_code, api_key=os.getenv("ANTHROPIC_API_KEY"),
-                             temperature=temperature, top_p=top_p, top_k=top_k)
+                             temperature=temperature, top_p=top_p, top_k=top_k, streaming=True)
         # , streaming=True
         return llm
     
@@ -141,7 +141,7 @@ class GenerativeModel:
     async def start_chat_stream_memory(self, model: str, message: str, temperature: float, top_p: float, top_k: int) -> Any:
         # Load model configuration and initialize LLM
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
-        llm = getattr(self, platform)(model_code, temperature)
+        llm = getattr(self, platform)(model_code, temperature, top_p, top_k)
 
         # Initialize the agent with the loaded LLM and memory
         agent = initialize_agent(
@@ -151,24 +151,23 @@ class GenerativeModel:
             verbose=True,
             max_iterations=3,
             early_stopping_method="generate",
-            memory=self.memory,
+            memory=self.memory_util.init_buffer_window_memory("aaaaaa"),
             return_intermediate_steps=False
         )
+
+        # print("Agent initialized: " + str(agent))
 
         # Define the asynchronous callback handler
         class AsyncCallbackHandler(AsyncIteratorCallbackHandler):
             content: str = ""
             final_answer: bool = False
 
-            def __init__(self):
-                super().__init__()
-
             async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
                 self.content += token
                 if self.final_answer:
                     if '"action_input": "' in self.content:
                         if token not in ['"', "}"]:
-                            self.queue.put_nowait(token)
+                            await self.queue.put(token)
                 elif "Final Answer" in self.content:
                     self.final_answer = True
                     self.content = ""
@@ -177,28 +176,38 @@ class GenerativeModel:
                 if self.final_answer:
                     self.content = ""
                     self.final_answer = False
-                    self.done.set()
+                    await self.queue.put(None)  # Signal the end of the stream
                 else:
                     self.content = ""
 
         # Define the function to run the agent call asynchronously
         async def run_call(message: str, stream_it: AsyncCallbackHandler):
-            # Assign callback handler to the agent's LLM
+            # print("Starting agent call...")
             agent.agent.llm_chain.llm.callbacks = [stream_it]
-            await agent.acall(inputs={"input": message})
+            try:
+                result = await agent.acall(inputs={"input": message})
+                # print("Agent call completed:", result)
+            except Exception as e:
+                print("Error in agent call:", e)
+                raise
 
         # Define the generator function to stream the response tokens
         async def create_gen(message: str, stream_it: AsyncCallbackHandler):
+            print("Message: " + str(message))
             task = asyncio.create_task(run_call(message, stream_it))
+            print("Task created: " + str(task))
+
             async for token in stream_it.aiter():
+                print("Token: " + str(token))
                 yield token
+
             await task
 
 
         # Initialize the callback handler and return the generator
-        # stream_it = AsyncCallbackHandler()
+        stream_it = AsyncCallbackHandler()
         # return await create_gen(message, stream_it)   
-        create_gen(message, AsyncCallbackHandler())
+        return create_gen(message, stream_it)
         
 
 

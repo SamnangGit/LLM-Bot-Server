@@ -150,7 +150,7 @@ class ChatController:
         messages = messages_data
         
         try:
-            generator = self.model.start_chat_stream_memory(model, messages, temperature, top_p, top_k)
+            generator = await self.model.start_chat_stream_memory(model, messages, temperature, top_p, top_k)
         except Exception as e:
             raise Exception(f"Error in starting chat stream: {e}")
         
