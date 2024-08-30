@@ -4,6 +4,11 @@ from models.chat import GenerativeModel
 from schemas.chat import Message
 from utils.platform_util import PlatformUtils
 
+from langchain.callbacks import AsyncIteratorCallbackHandler
+from typing import Any
+from langchain.schema import LLMResult
+
+
 import json
 import re
 
@@ -166,9 +171,9 @@ class ChatController:
         top_k = data.get("top_k")
         
         messages = messages_data
-        
+        callback_handler = AsyncCallbackHandler()
         try:
-            generator = self.model.start_chat_stream_memory_es(model, messages, temperature, top_p, top_k)
+            generator = self.model.start_chat_stream_memory_es(model, messages, temperature, top_p, top_k, callback_handler)
         except Exception as e:
             raise Exception(f"Error in starting chat stream: {e}")
         
@@ -186,3 +191,28 @@ class ChatController:
             return data[0]['content']
         except (json.JSONDecodeError, IndexError, KeyError):
             return "Error: Could not parse the message or extract content."
+        
+
+
+class AsyncCallbackHandler(AsyncIteratorCallbackHandler):
+    content: str = ""
+    final_answer: bool = False
+
+    async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
+        self.content += token
+        print("Token: " + token)
+        if self.final_answer:
+            if '"action_input": "' in self.content:
+                if token not in ['"', "}"]:
+                    await self.queue.put(token)
+        elif "Final Answer" in self.content:
+            self.final_answer = True
+            self.content = ""
+
+    async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        if self.final_answer:
+            self.content = ""
+            self.final_answer = False
+            await self.queue.put(None)  # Signal the end of the stream
+        else:
+            self.content = ""

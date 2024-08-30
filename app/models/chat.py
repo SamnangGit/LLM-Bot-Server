@@ -28,6 +28,7 @@ from langchain.agents import AgentType, initialize_agent
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler
 from langchain.schema import LLMResult
+from typing import AsyncGenerator
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -41,7 +42,7 @@ class GenerativeModel:
         self.chat = None
         # self.memory = self.memory_util.init_buffer_window_memory(uuid)
 
-    def gemini_platform(self, model_code, temperature, top_p, top_k):
+    def gemini_platform(self, model_code, temperature, top_p, top_k, callback_handler):
         llm = ChatGoogleGenerativeAI(model=model_code, 
                                       google_api_key=os.getenv("GEMINI_API_KEY"),
                                       safety_settings=safety_settings,
@@ -49,6 +50,7 @@ class GenerativeModel:
                                       top_p=top_p,
                                       top_k=top_k,
                                       streaming=True,
+                                      callbacks=[callback_handler]
                                     #   verbose=True,
                                       )    
         return llm  
@@ -211,16 +213,17 @@ class GenerativeModel:
         
 
 
-    async def start_chat_stream_memory_es(self, model: str, message: str, temperature: float, top_p: float, top_k: int):
+    async def start_chat_stream_memory_es(self, model: str, message: str, temperature: float, top_p: float, top_k: int, callback_handler) -> AsyncGenerator[str, None]:
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
-        llm = getattr(self, platform)(model_code, temperature)
-        self.chat = ConversationChain(llm=llm, memory=self.memory)
-        callback_handler = FinalStreamingStdOutCallbackHandler()
+        llm = getattr(self, platform)(model_code, temperature, top_p, top_k, callback_handler)
+        self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory("ccccccc"))
 
-
-        callback_handler = AsyncIteratorCallbackHandler()
-
-        run = asyncio.create_task(self.chat.arun(input=message))
+        run = asyncio.create_task(self.chat.ainvoke(input=message))
+        print("Messae: " + str(message))
+        print("Run: " + str(run))
+        print("Callback Handler: " + str(callback_handler.aiter()))
         async for token in callback_handler.aiter():
+            print("Token: " + str(token))
             yield token
         await run
+
