@@ -42,7 +42,7 @@ class GenerativeModel:
         self.chat = None
         # self.memory = self.memory_util.init_buffer_window_memory(uuid)
 
-    def gemini_platform(self, model_code, temperature, top_p, top_k, callback_handler):
+    def gemini_platform(self, model_code, temperature, top_p, top_k):
         llm = ChatGoogleGenerativeAI(model=model_code, 
                                       google_api_key=os.getenv("GEMINI_API_KEY"),
                                       safety_settings=safety_settings,
@@ -50,7 +50,7 @@ class GenerativeModel:
                                       top_p=top_p,
                                       top_k=top_k,
                                       streaming=True,
-                                      callbacks=[callback_handler]
+                                    #   callbacks=[callback_handler]
                                     #   verbose=True,
                                       )    
         return llm  
@@ -94,17 +94,23 @@ class GenerativeModel:
         
 
 
-    def start_chat(self, message: Message):
-        response = self.chat.invoke(message)
-        return response
+    def start_chat(self, model: str, message: Message, temperature: str, top_p: str, top_k: str):
+        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+        if model_code and platform:
+            self.chat = getattr(self, platform)(model_code, temperature, top_p, top_k)
+            response = self.chat.invoke(message)
+            # print(strresponse))
+        return str(response)
 
     def start_custom_chat(self, model, message: Message, temperature, top_p, top_k, uuid):
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
         if model_code and platform:
             print(f"Temperature: {temperature}, Top P: {top_p}, Top K: {top_k}")
             llm = getattr(self, platform)(model_code, temperature, top_p, top_k)
+            print(llm)
             self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid)
         )
+            print(self.chat)
             print('Memory: ')
             # print(self.memory.load_memory_variables({}))
         else:

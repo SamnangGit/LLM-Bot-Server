@@ -18,8 +18,14 @@ class ChatController:
         self.model = GenerativeModel()
 
 
-    def start_chat(self, message):
-        response = self.model.start_chat(message)
+    def start_chat(self, data):
+        model = data.get("model")
+        messages = data.get("messages")
+        temperature = data.get("temperature")
+        top_p = data.get("top_p")
+        top_k = data.get("top_k")
+        print("controller ")
+        response = self.model.start_chat(model, messages, temperature, top_p, top_k)
         return response
     
 

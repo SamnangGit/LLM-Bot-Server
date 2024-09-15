@@ -12,12 +12,10 @@ async def send_chat_message(request: Request):
         raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
     try:
         data = await request.json()
+        print(data)
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid JSON format")
-    message = data.get("message")
-    if message is None:
-        raise HTTPException(status_code=400, detail="Message field is required")
-    response = chat_controller.send_message(message)
+    response = chat_controller.start_chat(data)
     return {"response": response}
 
 
