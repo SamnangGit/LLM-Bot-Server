@@ -34,3 +34,4 @@ deepinfra_platform:
 ollama_platform:
   - Phi 3: phi3
   - Llama 3.1 8B: llama3.1
+  - Qwen 2: qwen2
