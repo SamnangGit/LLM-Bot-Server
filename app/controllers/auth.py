@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+
 from sqlalchemy.orm import Session
 from database.Identity import Identity
 from datetime import date
@@ -37,9 +39,9 @@ def login_identity(data, session: Session):
     hashed_password = pbkdf2_sha256.hash(password)
     user = session.query(Identity).filter(Identity.email == email).first()
     if not user:
-        return "invalid email"
+        raise HTTPException(status_code=401, detail="Invalid email")
     if not pbkdf2_sha256.verify(password, user.password):
-        return "invalid password"
+         raise HTTPException(status_code=401, detail="Invalid password")
     return {"message": "Login successful", "token": create_access_token(user)}
         
 

@@ -6,7 +6,7 @@ from utils.session_util import SessionUtils
 router = APIRouter()
 chat_controller = ChatController()
 
-@router.post("/chat")
+@router.post("/")
 async def send_chat_message(request: Request):
     if request.headers.get('Content-Type') != 'application/json':
         raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
@@ -19,7 +19,7 @@ async def send_chat_message(request: Request):
     return {"response": response}
 
 
-@router.post("/chat/custom")
+@router.post("/custom")
 async def send_custom_chat_message(request: Request, response: Response):
     # Check Content-Type header
     if request.headers.get('Content-Type') != 'application/json':

@@ -15,12 +15,17 @@ pydantic==2.7.1
 python-dotenv==1.0.1
 uvicorn==0.29.0
 PyYAML==6.0.1
+upstash-redis==1.2.0 
+
 
 passlib==1.7.4 
 PyJWT==2.9.0 
 
 SQLAlchemy==2.0.34 
 psycopg2==2.9.9 
+
+beautifulsoup4==4.12.3
+# docstring==0.1.2.4 
 
 # transformers==4.42.0 
 # fastapi-cors==0.0.6
