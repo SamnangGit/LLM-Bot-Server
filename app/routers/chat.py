@@ -3,6 +3,8 @@ from fastapi.responses import StreamingResponse
 from controllers.chat import ChatController
 from utils.session_util import SessionUtils
 
+from tools.web_search import WebSearch
+
 router = APIRouter()
 chat_controller = ChatController()
 
@@ -99,3 +101,10 @@ async def stream_chat_es(request: Request):
             gen,
             media_type="text/event-stream"
         )
+
+@router.get('/search')    
+async def search_google():
+    webSearch = WebSearch()
+    return webSearch.google_search('what is on on oknhanews.com') 
+        
+    
