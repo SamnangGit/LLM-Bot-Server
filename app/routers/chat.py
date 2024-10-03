@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from controllers.chat import ChatController
 from utils.session_util import SessionUtils
 
-from tools.web_search import WebSearch
+from tools.web_tools import WebTools
 
 router = APIRouter()
 chat_controller = ChatController()
@@ -104,7 +104,8 @@ async def stream_chat_es(request: Request):
 
 @router.get('/search')    
 async def search_google():
-    webSearch = WebSearch()
-    return webSearch.google_search('what is on on oknhanews.com') 
+    webTool = WebTools()
+    return webTool.scrap_main_page_link('what is on on oknhanews.com') 
+
         
     

@@ -3,12 +3,15 @@ from langchain_google_community import GoogleSearchAPIWrapper
 from dotenv import load_dotenv
 import os
 
+import requests
+from bs4 import BeautifulSoup
+
 import cohere
 
 
 load_dotenv()
 
-class WebSearch:
+class WebTools:
     def __init__(self):
         pass
 
@@ -43,4 +46,25 @@ class WebSearch:
             })
         
         return ranked_results
+    
+
+    def scrap_main_page_link(self, query):
+        url = self.google_search(query)[0]['url']
+        print(url)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            anchors = []
+            for a_tag in soup.find_all('a'):
+                href = a_tag.get('href') 
+                text = a_tag.get_text(strip=True)
+                anchors.append({"text": text, "href": href})
+
+            return anchors
+        except requests.exceptions.RequestException as e:
+            return {"error": str(e)}
+            
 
