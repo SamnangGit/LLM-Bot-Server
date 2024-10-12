@@ -1,7 +1,12 @@
+from langchain.tools import BaseTool
+
 from langchain_core.tools import Tool
 from langchain_google_community import GoogleSearchAPIWrapper
 from dotenv import load_dotenv
 import os
+
+from typing import Optional, Type
+from pydantic import BaseModel, Field
 
 import requests
 from bs4 import BeautifulSoup
@@ -11,9 +16,16 @@ import cohere
 
 load_dotenv()
 
-class WebTools:
+class WebScraperInput(BaseModel):
+    query: str = Field(..., description="The search query to use for finding the webpage to scrape")
+
+class WebTools(BaseTool):
+    name: str = "web_tool"
+    description: str = "Useful for scraping main page links from any webpage found via a Google search. Use this tool when you need to find recent news or information on any topic including what is on the news website."
+    args_schema: Type[BaseModel] = WebScraperInput
+
     def __init__(self):
-        pass
+        super().__init__()
 
     def google_search(self, query: str) -> str:
         GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -26,6 +38,7 @@ class WebTools:
 
 
     def rerank_search(self, query, search_results):
+        print(list(search_results))
         co = cohere.Client(api_key=os.getenv("COHERE_API_KEY"))
         urls = []
         for i in range(len(search_results)):
@@ -36,6 +49,7 @@ class WebTools:
             query=query,
             documents=urls
         )
+        print(rerank_response)
         
         ranked_results =[]
 
@@ -44,7 +58,7 @@ class WebTools:
             ranked_results.append({
                 "url": urls[result.index]
             })
-        
+        print(ranked_results)
         return ranked_results
     
 
@@ -66,5 +80,13 @@ class WebTools:
             return anchors
         except requests.exceptions.RequestException as e:
             return {"error": str(e)}
-            
 
+    def _run(self, query: str) -> str:
+            result = self.scrap_main_page_link(query)
+            # print(str(result))
+            return str(result)  # Convert to string for LangChain compatibility
+
+    async def _arun(self, query: str) -> str:
+        # For simplicity, we'll just call the sync version
+        # In a real scenario, you'd want to make this truly asynchronous
+        return self._run(query) 

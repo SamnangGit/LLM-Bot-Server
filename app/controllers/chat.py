@@ -12,6 +12,10 @@ from langchain.schema import LLMResult
 import json
 import re
 
+from langchain_community.llms import Ollama
+from tools.web_tools import WebTools
+from langchain.agents import initialize_agent, Tool, AgentType
+
 class ChatController:
     def __init__(self):
         self.platform_util = PlatformUtils()
@@ -197,6 +201,23 @@ class ChatController:
             return data[0]['content']
         except (json.JSONDecodeError, IndexError, KeyError):
             return "Error: Could not parse the message or extract content."
+        
+    def  web_chat(self, query):
+        llm = Ollama(model='llama3.1', temperature=0)
+
+        scraper_tool = WebTools()
+        print(scraper_tool.invoke(query))
+        # tools = tuple([scraper_tool])
+        # print(type(tools))
+
+        # agent = initialize_agent(
+        #     tools=tools, 
+        #     llm=llm, 
+        #     # agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        #     verbose=True
+        # )
+        # result = agent.run(query)
+        # return {"result": result}
         
 
 

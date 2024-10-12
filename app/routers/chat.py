@@ -105,7 +105,11 @@ async def stream_chat_es(request: Request):
 @router.get('/search')    
 async def search_google():
     webTool = WebTools()
-    return webTool.scrap_main_page_link('what is on on oknhanews.com') 
+    return webTool.scrap_main_page_link('what is on on oknha news') 
+
+# @router.get('/search')    
+# async def search_google():
+#     return chat_controller.web_chat('give me what are the topics on cnn news') 
 
         
     
