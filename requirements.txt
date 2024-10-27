@@ -29,6 +29,8 @@ langchain-google-community==2.0.0
 
 cohere==5.11.0 
 
+ google-api-python-client==2.149.0 
+
 # docstring==0.1.2.4 
 
 # transformers==4.42.0 
