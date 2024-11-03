@@ -3,8 +3,6 @@ from fastapi.responses import StreamingResponse
 from controllers.chat import ChatController
 from utils.session_util import SessionUtils
 
-from tools.web_tools import WebTools
-
 router = APIRouter()
 chat_controller = ChatController()
 
@@ -102,40 +100,17 @@ async def stream_chat_es(request: Request):
             media_type="text/event-stream"
         )
 
-@router.get('/search')    
-async def search_google():
-    # webTool = WebTools()
-    # return webTool.scrap_main_page_link('what is on on oknha news') 
-    # return webTool.google_custom_search("Go to oknha.news")
-    # return webTool.google_search("Go to www.oknha.news")
-
-    # result = chat_controller.web_chat("Give me trending news on oknha.news website related to bussiness and give the summary information in Khmer language also give me the link that you get the information from")
-    # result = chat_controller.web_chat("What is the cuurent weather today in Phnom Penh. Get the results and then save it to a file")
-    # result = chat_controller.web_chat("War ‘tour’, football and graffiti: How Russia is trying to influence Africa. Search the internet and tell me is this news fake or real?")
-    # result = chat_controller.web_chat("what is the article in this website talk about https://www.oknha.news/social-eco/159782 . Give your answer in Khmer and save it to a file")
-    # tool = WebTools();
-    # result = tool.scrap_main_page_content("Give me a summary on website oknha.news")
-    # result = chat_controller.web_chat("Give me a summary of trending news on website oknha.news. And save it to a text file")
-    # result = chat_controller.web_chat("Give me a summary of trending news on CNN. Just give me the response and Do not save it to txt file!") 
-    # result = chat_controller.web_chat("Give me the recent trending news on oknha.news website")
-    # result = chat_controller.web_chat("Give me what is on edition.cnn.com. Provide me a summary of it")
-    result = chat_controller.web_chat("Go to this website and summerize for me https://medium.com/@workboxtech/ai-in-test-data-generation-a-leap-in-software-testing-efficiency-76e7b8ee5667")
-    # result = chat_controller.web_chat("Use the web_content_reader_tool to find the latest saved content, with query_type set to 'latest' and value set to empty string")
-    # result = chat_controller.web_chat("Go to oknha.news and Give me more detail based on this news titleអ្នកឧកញ៉ា ហ៊ុន ឡាក់ ចូលរួមពិធីចុះហត្ថលេខាលើអនុស្សរណៈនៃការយោគយល់គ្នា")
-    return result
 
 @router.get('/chat_tool')
 async def chat_tool():
     # result = chat_controller.chat_with_tool("Go to this website and summerize for me https://medium.com/@workboxtech/ai-in-test-data-generation-a-leap-in-software-testing-efficiency-76e7b8ee5667")
-    # result = chat_controller.chat_with_tool("use the tool that is provide to DuckDuckGo search tool and give me the answer who is barack obama?. After giving the answer please save it to a file using file tool")
-    result = chat_controller.chat_with_tool("with the providing file tool, search in the file cabinet and give me a content about barack obama")
-
+    # result = chat_controller.chat_with_tool("use the tool that is provide to tavily search tool and give me the answer who is Elon Musk?. After giving the answer please do not save it to a file using file tool")
+    # result = chat_controller.chat_with_tool("with the providing file tool, search in the file cabinet and give me a content about barack obama")
+    result = chat_controller.chat_with_tool("with the providing file tool, search in the file cabinet and give me a content the latest save file")
 
     return result
 
-# @router.get('/search')    
-# async def search_google():
-#     return chat_controller.web_chat('give me what are the topics on cnn news') 
+
 
         
     

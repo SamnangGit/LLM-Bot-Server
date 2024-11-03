@@ -197,8 +197,8 @@ class OnlineSearchTool:
         except Exception as e:
             return [{"error": f"wikipedia search failed: {str(e)}"}]
 
-
-    def get_tools(self, include: List[str] = None) -> List[tool]:
+    @staticmethod
+    def get_tools(include: List[str] = None) -> List[tool]:
         """
         Get list of search tools to pass to LLM.
 
@@ -210,12 +210,12 @@ class OnlineSearchTool:
             List[tool]: List of tool functions to pass to LLM
         """
         search_tools = {
-            'google': self.google_search,
-            'ddg': self.ddg_search,
-            'tavily': self.tavily_search,
-            'exa': self.exa_search,
-            'you': self.you_search,
-            'wikipedia': self.wikipedia_search
+            'google': OnlineSearchTool().google_search,
+            'ddg': OnlineSearchTool().ddg_search,
+            'tavily': OnlineSearchTool().tavily_search,
+            'exa': OnlineSearchTool().exa_search,
+            'you': OnlineSearchTool().you_search,
+            'wikipedia': OnlineSearchTool().wikipedia_search
         }
         
         if include:

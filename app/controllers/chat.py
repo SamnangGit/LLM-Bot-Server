@@ -13,9 +13,6 @@ import json
 import re
 
 from langchain_community.llms import Ollama
-from tools.web_tools import WebTools
-from tools.save_to_file_tool import WebContentSaverTool
-from tools.read_from_file_tool import WebContentReaderTool
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain import hub
 from langchain_core.tools import Tool
@@ -217,156 +214,17 @@ class ChatController:
         except (json.JSONDecodeError, IndexError, KeyError):
             return "Error: Could not parse the message or extract content."
             
-    def web_chat(self, query):
-        llm = ChatOpenAI(temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
-        scraper_tool = WebTools()
-        save_tool = WebContentSaverTool()
-        reader_tool = WebContentReaderTool()
-        
-        functions = [
-            {
-                "name": "web_tool",
-                "description": scraper_tool.description,
-                "parameters": scraper_tool.args_schema.schema()
-            },
-            {
-                "name": "web_content_saver_tool",
-                "description": save_tool.description,
-                "parameters": save_tool.args_schema.schema()
-            },
-            {
-                "name": "web_content_reader_tool",
-                "description": reader_tool.description,
-                "parameters": reader_tool.args_schema.schema()
-            }
-        ]
-        
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a helpful AI assistant that uses web tools to find and manage information.
-            When you need to search for new information, use the web_tool function.
-            After getting web content, if the user wants to save the scraped content to a file,
-            you should always save it using the web_content_saver_tool function.
-            When the user wants to retrieve previously saved content, you MUST use the web_content_reader_tool function.
-            
-            For the web_content_reader_tool, you MUST ALWAYS specify both query_type and value:
-            - query_type: One of 'latest', 'by_domain', 'by_date', 'search', or 'file'
-            - value: The search term, domain, date, or filename to look for (use empty string "" for 'latest' queries)
-            - max_results: Number of results to return (optional, default 5)
-            
-            Example function calls:
-            - For latest content: 
-            {{"query_type": "latest", "value": ""}}
-            - For domain search: 
-            {{"query_type": "by_domain", "value": "example.com"}}
-            - For date search: 
-            {{"query_type": "by_date", "value": "2024-10-18"}}
-            
-            Always include both query_type and value parameters in your function calls."""),
-            ("human", "{query}")
-        ])
-
-        
-        messages = prompt.format_messages(query=query)
-        response = llm.invoke(messages, functions=functions)
-        
-        if response.additional_kwargs.get("function_call"):
-            function_call = response.additional_kwargs["function_call"]
-            function_name = function_call["name"]
-            function_args = json.loads(function_call["arguments"])
-            
-            if function_name == scraper_tool.name:
-                # First, get the web content
-                scraped_content = scraper_tool._run(**function_args)
-                
-                # Convert scraped_content to dictionary if it's a string
-                if isinstance(scraped_content, str):
-                    try:
-                        content_dict = json.loads(scraped_content)
-                    except json.JSONDecodeError:
-                        content_dict = {
-                            "url": function_args.get("url", ""),
-                            "title": "Scraped Content",
-                            "content": scraped_content,
-                            "paragraphs": [scraped_content]
-                        }
-                else:
-                    content_dict = scraped_content
-                    
-                # Add the scraped content to messages
-                messages.append(AIMessage(content=str(scraped_content)))
-                messages.append(
-                    FunctionMessage(
-                        content=str(scraped_content),
-                        name=function_name
-                    )
-                )
-                
-                # Now, call the save tool with the content
-                save_response = save_tool._run(content=content_dict)
-                
-                # Add the save response to messages
-                messages.append(
-                    FunctionMessage(
-                        content=str(save_response),
-                        name=save_tool.name
-                    )
-                )
-                
-                # Get the final response from the model
-                final_response = llm.invoke(messages, functions=functions)
-                return {"result": final_response.content}
-                
-            elif function_name == save_tool.name:
-                # Direct call to save tool
-                save_response = save_tool._run(**function_args)
-                messages.append(
-                    FunctionMessage(
-                        content=str(save_response),
-                        name=function_name
-                    )
-                )
-                final_response = llm.invoke(messages, functions=functions)
-                return {"result": final_response.content}
-                
-            elif function_name == "web_content_reader_tool":
-                # Handle content retrieval
-                reader_response = reader_tool._run(**function_args)
-                
-                # Add the reader response to messages
-                messages.append(
-                    FunctionMessage(
-                        content=str(reader_response),
-                        name=function_name
-                    )
-                )
-                
-                # Get final response from the model
-                final_response = llm.invoke(messages)
-                return {"result": final_response.content}
-        
-        # If no function call is needed, return the initial response
-        return {"result": response.content}
     
 
     def chat_with_tool(self, query):
         llm = ChatOpenAI(temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
         try:
-            onlineSearchTool = OnlineSearchTool()
-            search_tools = onlineSearchTool.get_tools()
-            # file_ops_tools = FileOpsTool();
+            search_tools = OnlineSearchTool().get_tools()
             file_tools = FileOpsTool().get_tools()
-            print(file_tools)
             tools = []
             tools.extend(search_tools)
             tools.extend(file_tools)
-            # tool = tools[0] 
 
-
-            # print(tools)
-            # print(tool.description)
-            
-            # print(tool.name)
-     
             # wrapped_tool = Tool(name=tool.name, 
             #         func=lambda q: tool(q),         
             #         description= tool.description)
