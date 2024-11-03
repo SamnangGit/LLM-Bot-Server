@@ -127,7 +127,9 @@ async def search_google():
 @router.get('/chat_tool')
 async def chat_tool():
     # result = chat_controller.chat_with_tool("Go to this website and summerize for me https://medium.com/@workboxtech/ai-in-test-data-generation-a-leap-in-software-testing-efficiency-76e7b8ee5667")
-    result = chat_controller.chat_with_tool("use the tool that is provide to DuckDuckGo search tool and give me the answer who is barack obama?")
+    # result = chat_controller.chat_with_tool("use the tool that is provide to DuckDuckGo search tool and give me the answer who is barack obama?. After giving the answer please save it to a file using file tool")
+    result = chat_controller.chat_with_tool("with the providing file tool, search in the file cabinet and give me a content about barack obama")
+
 
     return result
 

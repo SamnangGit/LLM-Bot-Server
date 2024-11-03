@@ -21,6 +21,7 @@ from langchain import hub
 from langchain_core.tools import Tool
 
 from tools.online_search_tool import OnlineSearchTool
+from tools.file_ops_tool import FileOpsTool
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, ChatMessage, FunctionMessage
@@ -351,7 +352,13 @@ class ChatController:
         llm = ChatOpenAI(temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
         try:
             onlineSearchTool = OnlineSearchTool()
-            tools = onlineSearchTool.get_tools()
+            search_tools = onlineSearchTool.get_tools()
+            # file_ops_tools = FileOpsTool();
+            file_tools = FileOpsTool().get_tools()
+            print(file_tools)
+            tools = []
+            tools.extend(search_tools)
+            tools.extend(file_tools)
             # tool = tools[0] 
 
 
