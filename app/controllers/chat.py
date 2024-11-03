@@ -16,6 +16,11 @@ from langchain_community.llms import Ollama
 from tools.web_tools import WebTools
 from tools.save_to_file_tool import WebContentSaverTool
 from tools.read_from_file_tool import WebContentReaderTool
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain import hub
+from langchain_core.tools import Tool
+
+from tools.online_search_tool import OnlineSearchTool
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, ChatMessage, FunctionMessage
@@ -340,6 +345,33 @@ class ChatController:
         
         # If no function call is needed, return the initial response
         return {"result": response.content}
+    
+
+    def chat_with_tool(self, query):
+        llm = ChatOpenAI(temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
+        try:
+            onlineSearchTool = OnlineSearchTool()
+            tools = onlineSearchTool.get_tools()
+            # tool = tools[0] 
+
+
+            # print(tools)
+            # print(tool.description)
+            
+            # print(tool.name)
+     
+            # wrapped_tool = Tool(name=tool.name, 
+            #         func=lambda q: tool(q),         
+            #         description= tool.description)
+
+            prompt = hub.pull("hwchase17/openai-tools-agent")
+            agent = create_openai_tools_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+            result = agent_executor.invoke({"input": query})
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+        return result
+
 
 class AsyncCallbackHandler(AsyncIteratorCallbackHandler):
     content: str = ""

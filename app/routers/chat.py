@@ -118,11 +118,18 @@ async def search_google():
     # result = chat_controller.web_chat("Give me a summary of trending news on website oknha.news. And save it to a text file")
     # result = chat_controller.web_chat("Give me a summary of trending news on CNN. Just give me the response and Do not save it to txt file!") 
     # result = chat_controller.web_chat("Give me the recent trending news on oknha.news website")
-    result = chat_controller.web_chat("Give me what is on edition.cnn.com. Provide me a summary of it")
+    # result = chat_controller.web_chat("Give me what is on edition.cnn.com. Provide me a summary of it")
+    result = chat_controller.web_chat("Go to this website and summerize for me https://medium.com/@workboxtech/ai-in-test-data-generation-a-leap-in-software-testing-efficiency-76e7b8ee5667")
     # result = chat_controller.web_chat("Use the web_content_reader_tool to find the latest saved content, with query_type set to 'latest' and value set to empty string")
     # result = chat_controller.web_chat("Go to oknha.news and Give me more detail based on this news titleអ្នកឧកញ៉ា ហ៊ុន ឡាក់ ចូលរួមពិធីចុះហត្ថលេខាលើអនុស្សរណៈនៃការយោគយល់គ្នា")
     return result
-    
+
+@router.get('/chat_tool')
+async def chat_tool():
+    # result = chat_controller.chat_with_tool("Go to this website and summerize for me https://medium.com/@workboxtech/ai-in-test-data-generation-a-leap-in-software-testing-efficiency-76e7b8ee5667")
+    result = chat_controller.chat_with_tool("use the tool that is provide to DuckDuckGo search tool and give me the answer who is barack obama?")
+
+    return result
 
 # @router.get('/search')    
 # async def search_google():
