@@ -23,6 +23,7 @@ from langchain_core.tools import Tool
 
 from tools.online_search_tool import OnlineSearchTool
 from tools.file_ops_tool import FileOpsTool
+from tools.web_scrapping_tool import WebScrapingTool
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, ChatMessage, FunctionMessage
@@ -302,9 +303,11 @@ class ChatController:
         try:
             search_tools = OnlineSearchTool().get_tools()
             file_tools = FileOpsTool().get_tools()
+            scrape_tools = WebScrapingTool.get_tools()
             tools = []
             tools.extend(search_tools)
             tools.extend(file_tools)
+            tools.extend(scrape_tools)
 
             prompt = ChatPromptTemplate(
                 messages = [
