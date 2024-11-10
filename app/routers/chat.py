@@ -104,9 +104,16 @@ async def stream_chat_es(request: Request):
 @router.get('/chat_tool')
 async def chat_tool():
     # result = chat_controller.chat_with_tool("Go to this website and summerize for me https://medium.com/@workboxtech/ai-in-test-data-generation-a-leap-in-software-testing-efficiency-76e7b8ee5667")
-    # result = chat_controller.chat_with_tool("use the tool that is provide to tavily search tool and give me the answer who is Elon Musk?. After giving the answer please do not save it to a file using file tool")
+    # result = chat_controller.chat_with_tool("use the tool that is provide to google search tool and give me the answer who won American Election 2024?. After giving the answer please save it to a file using file tool")
     # result = chat_controller.chat_with_tool("with the providing file tool, search in the file cabinet and give me a content about barack obama")
-    result = chat_controller.chat_with_tool("with the providing file tool, search in the file cabinet and give me a content the latest save file")
+    # result = chat_controller.chat_with_tool("with the providing file tool, search in the file cabinet and give me a content the latest save file")
+    result = chat_controller.chat_with_ollama_tool("use the tool that is provide to google search tool and give me a summary about Macbook Pro M4 chip`. After giving the answer please do not forget to  save it to a file using write file tool. It is a must to invoke write_file tool to save the content after searching.")
+    # result = chat_controller.chat_with_groq_tool("use the tool that is provide to google search tool and give me a summary of what is langgraph`. After giving the answer please save it to a file using file tool")
+    # result = chat_controller.chat_with_anthropic_tool("use the tool that is provide to google search tool and give me a summary of why Donuld Trump won 2024 election. Do not give me the answer directly, use the google search first and give me a response from there. After giving the answer please save it to a file using file tool")
+    # result = chat_controller.chat_with_deepinfra_tool("use the tool that is provide to google search tool and give me a summary of Venom 2024 movie. Do not give me the answer directly, use the google search first and give me a response from there. After giving the answer please do not forget to save it to a file using file tool")
+    # result = chat_controller.chat_with_gemini_tool("use the tool that is provide to google search tool and give me a summary of 2024 Apple Stock. Do not give me the answer directly, use the google search first and give me a response from there. After giving the answer please do not forget to save it to a file using file tool")
+
+
 
     return result
 

@@ -34,4 +34,6 @@ deepinfra_platform:
 ollama_platform:
   - Phi 3: phi3
   - Llama 3.1 8B: llama3.1
+  - Llama 3.2 3B: llama3.2
   - Qwen 2: qwen2
+  - Nemotron Mini: nemotron-mini

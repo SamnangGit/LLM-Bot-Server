@@ -12,8 +12,12 @@ from langchain.schema import LLMResult
 import json
 import re
 
-from langchain_community.llms import Ollama
-from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.chat_models import ChatDeepInfra
+from langchain_anthropic import ChatAnthropic
+from langchain_groq import ChatGroq
+from langchain.agents import AgentExecutor, create_openai_tools_agent, create_tool_calling_agent
 from langchain import hub
 from langchain_core.tools import Tool
 
@@ -22,7 +26,10 @@ from tools.file_ops_tool import FileOpsTool
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, ChatMessage, FunctionMessage
+from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 from langchain.prompts import ChatPromptTemplate
+
+
 import os
 from dotenv import load_dotenv
 
@@ -216,7 +223,7 @@ class ChatController:
             
     
 
-    def chat_with_tool(self, query):
+    def chat_with_openai_tool(self, query):
         llm = ChatOpenAI(temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
         try:
             search_tools = OnlineSearchTool().get_tools()
@@ -229,14 +236,165 @@ class ChatController:
             #         func=lambda q: tool(q),         
             #         description= tool.description)
 
-            prompt = hub.pull("hwchase17/openai-tools-agent")
-            agent = create_openai_tools_agent(llm, tools, prompt)
+            # prompt = hub.pull("hwchase17/openai-tools-agent")
+            prompt = ChatPromptTemplate(
+                messages = [
+                    SystemMessagePromptTemplate(prompt=PromptTemplate(template='You are a helpful assistant')),
+                    MessagesPlaceholder(variable_name='chat_history', optional=True),
+                    HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=['input'], template='{input}')),
+                    MessagesPlaceholder(variable_name='agent_scratchpad')
+                ]
+            )
+            print(type(prompt))
+            print("================================================")
+            print(prompt)
+            print("================================================")
+            agent = create_tool_calling_agent(llm, tools, prompt)
             agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
             result = agent_executor.invoke({"input": query})
         except Exception as e:
             raise Exception(f"Error : {e}")
         return result
+    
 
+    def chat_with_ollama_tool(self, query):
+        llm = ChatOllama(
+            model="llama3.2",
+            temperature=0
+        )
+        
+        try:
+            search_tools = OnlineSearchTool().get_tools()
+            file_tools = FileOpsTool().get_tools()
+            tools = []
+            tools.extend(search_tools)
+            tools.extend(file_tools)
+            
+            tool_names = [tool.name for tool in tools]
+            tool_descriptions = "\n".join([f"{tool.name}: {tool.description}" for tool in tools])
+            
+            prompt = ChatPromptTemplate(
+                messages = [
+                    SystemMessagePromptTemplate(prompt=PromptTemplate(template='You are a helpful assistant')),
+                    MessagesPlaceholder(variable_name='chat_history', optional=True),
+                    HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=['input'], template='{input}')),
+                    MessagesPlaceholder(variable_name='agent_scratchpad')
+                ]
+            )
+
+            
+            agent = create_tool_calling_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(agent=agent, tools=tools ,verbose=True)
+            
+            result = agent_executor.invoke({
+                "input": query
+            })
+            
+            return result
+            
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+        
+        
+
+    def chat_with_groq_tool(self, query):
+        llm = ChatGroq(model="llama-3.1-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
+        try:
+            search_tools = OnlineSearchTool().get_tools()
+            file_tools = FileOpsTool().get_tools()
+            tools = []
+            tools.extend(search_tools)
+            tools.extend(file_tools)
+
+            prompt = ChatPromptTemplate(
+                messages = [
+                    SystemMessagePromptTemplate(prompt=PromptTemplate(template='You are a helpful assistant')),
+                    MessagesPlaceholder(variable_name='chat_history', optional=True),
+                    HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=['input'], template='{input}')),
+                    MessagesPlaceholder(variable_name='agent_scratchpad')
+                ]
+            )
+            agent = create_tool_calling_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+            result = agent_executor.invoke({"input": query})
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+        return result
+    
+
+    def chat_with_anthropic_tool(self, query):
+        llm = ChatAnthropic(model_name="claude-3-5-sonnet-20240620", api_key=os.getenv("ANTHROPIC_API_KEY"))
+        try:
+            search_tools = OnlineSearchTool().get_tools()
+            file_tools = FileOpsTool().get_tools()
+            tools = []
+            tools.extend(search_tools)
+            tools.extend(file_tools)
+
+            prompt = ChatPromptTemplate(
+                messages = [
+                    SystemMessagePromptTemplate(prompt=PromptTemplate(template='You are a helpful assistant')),
+                    MessagesPlaceholder(variable_name='chat_history', optional=True),
+                    HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=['input'], template='{input}')),
+                    MessagesPlaceholder(variable_name='agent_scratchpad')
+                ]
+            )
+            agent = create_tool_calling_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+            result = agent_executor.invoke({"input": query})
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+        return result
+    
+    def chat_with_deepinfra_tool(self, query):
+        llm = ChatDeepInfra(model="meta-llama/Meta-Llama-3-70B-Instruct", deepinfra_api_token=os.getenv("DEEPINFRA_API_TOKEN"))
+        try:
+            search_tools = OnlineSearchTool().get_tools()
+            file_tools = FileOpsTool().get_tools()
+            tools = []
+            tools.extend(search_tools)
+            tools.extend(file_tools)
+
+            prompt = ChatPromptTemplate(
+                messages = [
+                    SystemMessagePromptTemplate(prompt=PromptTemplate(template='You are a helpful assistant')),
+                    MessagesPlaceholder(variable_name='chat_history', optional=True),
+                    HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=['input'], template='{input}')),
+                    MessagesPlaceholder(variable_name='agent_scratchpad')
+                ]
+            )
+            agent = create_tool_calling_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+            result = agent_executor.invoke({"input": query})
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+        return result
+    
+    # To Do: This Funtction not yet working 
+    def chat_with_gemini_tool(self, query):
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", google_api_key=os.getenv("GEMINI_API_KEY"))
+        try:
+            search_tools = OnlineSearchTool().get_tools()
+            file_tools = FileOpsTool().get_tools()
+            tools = []
+            tools.extend(search_tools)
+            tools.extend(file_tools)
+
+            prompt = ChatPromptTemplate(
+                messages = [
+                    SystemMessagePromptTemplate(prompt=PromptTemplate(template='You are a helpful assistant')),
+                    MessagesPlaceholder(variable_name='chat_history', optional=True),
+                    HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=['input'], template='{input}')),
+                    MessagesPlaceholder(variable_name='agent_scratchpad')
+                ]
+            )
+            agent = create_tool_calling_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+            result = agent_executor.invoke({"input": query})
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+        return result
+    
 
 class AsyncCallbackHandler(AsyncIteratorCallbackHandler):
     content: str = ""
