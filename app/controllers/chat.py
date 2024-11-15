@@ -18,17 +18,13 @@ from langchain_community.chat_models import ChatDeepInfra
 from langchain_anthropic import ChatAnthropic
 from langchain_groq import ChatGroq
 from langchain.agents import AgentExecutor, create_openai_tools_agent, create_tool_calling_agent
-from langchain import hub
-from langchain_core.tools import Tool
 
 from tools.online_search_tool import OnlineSearchTool
 from tools.file_ops_tool import FileOpsTool
 from tools.web_scrapping_tool import WebScrapingTool
 
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, AIMessage, ChatMessage, FunctionMessage
 from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
-from langchain.prompts import ChatPromptTemplate
 
 
 import os
@@ -69,10 +65,29 @@ class ChatController:
         return formatted_response
     
 
+    def start_chat_with_tool(self, data):
+        model = data.get("model")
+        messages = data.get("messages")
+        temperature = data.get("temperature")
+        top_p = data.get("top_p")
+        top_k = data.get("top_k")
+        # uuid = data.get("uuid")
+        uuid = "12345678111"
+        # try:
+        response, platform, model_code = self.model.start_chat_with_tool(model, messages, temperature, top_p, top_k, uuid)
+        formatted_response = self.standardize_response(model_code, platform, response)
+        print("==============================")
+        print(formatted_response)
+        print("==============================")
+
+        # except Exception as e:
+        #     return {"error": str(e)}
+        return formatted_response
+
     def standardize_response(self, model_code, platform, response):
         if platform == "groq_platform":
             standardized_response = {
-                "content": response,
+                "content": response["output"],
                 "response_metadata": {
                     "token_usage": {
                         "completion_tokens": 0,

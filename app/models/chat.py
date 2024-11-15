@@ -31,8 +31,23 @@ from langchain.schema import LLMResult
 from typing import AsyncGenerator
 
 
+from tools.online_search_tool import OnlineSearchTool
+from tools.file_ops_tool import FileOpsTool
+from tools.web_scrapping_tool import WebScrapingTool
+from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
+from langchain.agents import AgentExecutor, create_openai_tools_agent, create_tool_calling_agent
+
+from langsmith import Client
+
+# Auto-trace LLM calls in-context
+client = Client(api_key=os.getenv("LANGSMITH_API_KEY"),
+                api_url=os.getenv("LANGCHAIN_ENDPOINT"),
+                )
+
 ssl._create_default_https_context = ssl._create_unverified_context
 load_dotenv()
+
+
 
 class GenerativeModel:
 
@@ -41,6 +56,7 @@ class GenerativeModel:
         self.memory_util = MemoryUtils()
         self.chat = None
         # self.memory = self.memory_util.init_buffer_window_memory(uuid)
+
 
     def gemini_platform(self, model_code, temperature, top_p, top_k):
         llm = ChatGoogleGenerativeAI(model=model_code, 
@@ -110,12 +126,8 @@ class GenerativeModel:
             print(llm)
             self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid)
         )
-            print(self.chat)
-            print('Memory: ')
-            # print(self.memory.load_memory_variables({}))
         else:
             return {"error": "Model not found"}, 400
-
         try:
             response = self.chat.predict(input=message)
             # history.add_messages(response)
@@ -124,6 +136,52 @@ class GenerativeModel:
             return {"error": str(e)}
         finally:
             print(type(response))
+            # history.add_message(conte)
+
+        return response, platform, model_code
+    
+
+    def start_chat_with_tool(self, model, message: Message, temperature, top_p, top_k, uuid="12345678111"):
+        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+
+        search_tools = OnlineSearchTool().get_tools()
+        file_tools = FileOpsTool().get_tools()
+        scrape_tools = WebScrapingTool.get_tools()
+        tools = []
+        tools.extend(search_tools)
+        tools.extend(file_tools)
+        tools.extend(scrape_tools)
+
+        prompt = ChatPromptTemplate(
+            messages = [
+                SystemMessagePromptTemplate(prompt=PromptTemplate(template='You are a helpful assistant')),
+                MessagesPlaceholder(variable_name='chat_history', optional=True),
+                HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=['input'], template='{input}')),
+                MessagesPlaceholder(variable_name='agent_scratchpad')
+            ]
+        )
+        print("==========================================================")
+        print(prompt)
+        print("==========================================================")
+
+        memory = self.memory_util.init_buffer_window_memory(uuid)
+        if model_code and platform:
+            print(f"Temperature: {temperature}, Top P: {top_p}, Top K: {top_k}")
+            llm = getattr(self, platform)(model_code, temperature, top_p, top_k)
+            # llm = ChatGroq(model="llama-3.1-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
+            # self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid)
+            agent = create_tool_calling_agent(llm, tools, prompt)
+            self.chat = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+            print(f"Memory before chat start: {memory.load_memory_variables({})}")
+        else:
+            return {"error": "Model not found"}, 400
+
+        try:
+            response = self.chat.invoke({"input": message})
+        except Exception as e:
+            return {"error": str(e)}
+        # finally:
+            # print(type(response))
             # history.add_message(conte)
 
         return response, platform, model_code

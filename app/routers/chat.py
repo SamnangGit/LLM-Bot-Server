@@ -113,11 +113,38 @@ async def chat_tool():
     # result = chat_controller.chat_with_deepinfra_tool("use the tool that is provide to google search tool and give me a summary of Venom 2024 movie. Do not give me the answer directly, use the google search first and give me a response from there. After giving the answer please do not forget to save it to a file using file tool")
     # result = chat_controller.chat_with_gemini_tool("use the tool that is provide to google search tool and give me a summary of 2024 Apple Stock. Do not give me the answer directly, use the google search first and give me a response from there. After giving the answer please do not forget to save it to a file using file tool")
     # result = chat_controller.chat_with_groq_tool("use the tool that is provide to google search tool and give me a summary of new topic on oknha.news`. Scrape the content and please save it to a file using file tool")
-    result = chat_controller.chat_with_groq_tool("use the tools that are provided to use google search tool to search who is samnang pheng, then using the first link from the output of the search result, go to it and scrape the webpage. After giving the answer please save it to a file using file tool")
-
-
-
+    # result = chat_controller.chat_with_groq_tool("use the tools that are provided to use google search tool to search who is samnang pheng, then using the first link from the output of the search result, go to it and scrape the webpage. After giving the answer please save it to a file using file tool")
+    result = chat_controller.chat_with_groq_tool("use the tools that are provided to tell me what is the tending topic on oknha.news. After giving the answer please save it to a file using file tool")
     return result
+
+@router.post('/chat_with_tool')
+async def chat_with_tool(request: Request, response: Response):
+    if request.headers.get('Content-Type') != 'application/json':
+        raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
+    try:
+        data = await request.json()
+        print("data: " + str(data))
+        # uuid = SessionUtils.get_session_id(request)
+        uuid = "123456781111"
+        if uuid is None:
+            response.set_cookie(
+                key="uuid",
+                value=SessionUtils.generate_session_id(),
+                max_age=86400,  # Cookie expires in 1 day
+                httponly=True,
+                samesite="None",  # Allow cross-site cookies
+                secure=False,  # Only send cookie over HTTPS if True
+            )
+        else:
+            data["uuid"] = uuid
+            print("uuid: " + data["uuid"])  
+            print("data: " + str(data))
+        # data["uuid"] = uuid
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON format")
+    print("cookies: " + str(SessionUtils.get_session_id(request)))
+    response_data = chat_controller.start_chat_with_tool(data)
+    return {"response": response_data}
 
 
 
