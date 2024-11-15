@@ -148,5 +148,16 @@ async def chat_with_tool(request: Request, response: Response):
 
 
 
-        
-    
+@router.get("/rag")
+async def rag():
+    from rag.document_loaders.local_docs_loader import LocalDocsLoader
+    # loader = LocalDocsLoader()
+    # return loader.csv_loader(file_path="/Users/samnangpheng/Desktop/AllianceX/ChatBot/ServerSide/llm-bot-server/app/public/dataset/healthcare_dataset.csv")
+    # return loader.pdf_loader(file_path="/Users/samnangpheng/Desktop/AllianceX/ChatBot/ServerSide/llm-bot-server/app/public/dataset/Week_Thirty_One_Status_Report.pdf")
+    # return loader.unstructured_loader(file_path="/Users/samnangpheng/Desktop/AllianceX/ChatBot/ServerSide/llm-bot-server/app/public/dataset/Week_Thirty_One_Status_Report.pdf")
+
+    from rag.document_loaders.web_loader import WebLoader
+    loader = WebLoader()
+    # return loader.single_page_loader(url="https://www.langchain.com/langsmith")
+    # return loader.multiple_pages_loader(urls=["https://www.espn.com/", "https://google.com"])
+    return loader.firecrawl_pages_loader(url="https://www.oknha.news/")

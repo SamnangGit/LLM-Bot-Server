@@ -40,3 +40,9 @@ YOU_API_KEY=
 
 
 FILE_CABINET_PATH=
+
+UNSTRUCTURED_API_KEY=
+UNSTRUCTURED_APP_URL=https://api.unstructuredapp.io/general/v0/general
+
+FIRECRAWL_API_KEY=
+FIRECRAWL_URL=https://firecrawl.dev
