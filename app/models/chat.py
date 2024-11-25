@@ -39,6 +39,8 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent, create_to
 
 from langsmith import Client
 
+from rag.vector_stores.milvus_db import MilvusStore
+
 # Auto-trace LLM calls in-context
 client = Client(api_key=os.getenv("LANGSMITH_API_KEY"),
                 api_url=os.getenv("LANGCHAIN_ENDPOINT"),
@@ -183,6 +185,41 @@ class GenerativeModel:
         # finally:
             # print(type(response))
             # history.add_message(conte)
+
+        return response, platform, model_code
+    
+
+    def start_chat_with_doc(self, model, message: Message, temperature, top_p, top_k, uuid):
+        model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
+        if model_code and platform:
+            llm = getattr(self, platform)(model_code, temperature, top_p, top_k)
+            self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid)
+        )
+        else:
+            return {"error": "Model not found"}, 400
+        try:
+            milvus = MilvusStore()
+            context = milvus.document_retriever(query=str(message))
+
+            prompt_template = """
+                Please answer the following question:
+                <question>
+                {message}
+                </question>
+                Based on this following context:
+                <context>
+                {context}
+                </context>
+            """
+
+
+            prompt = prompt_template.format(message=message, context=context)
+            print("============================")
+            print(prompt)
+            print("============================")
+            response = self.chat.predict(input=prompt)
+        except Exception as e:
+            return {"error": str(e)}
 
         return response, platform, model_code
     

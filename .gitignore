@@ -32,3 +32,6 @@ archive.zip
 
 scraped_content
 public
+
+.milvus_rag.db.lock
+milvus_rag.db

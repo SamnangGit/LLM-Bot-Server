@@ -26,7 +26,6 @@ from tools.web_scrapping_tool import WebScrapingTool
 from langchain_openai import ChatOpenAI
 from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 
-
 import os
 from dotenv import load_dotenv
 
@@ -83,11 +82,29 @@ class ChatController:
         # except Exception as e:
         #     return {"error": str(e)}
         return formatted_response
+    
+
+    def start_chat_with_doc(self, data):
+        try:
+            model = data.get("model")
+            messages = data.get("messages")
+            temperature = data.get("temperature")
+            top_p = data.get("top_p")
+            top_k = data.get("top_k")
+            # uuid = data.get("uuid")
+            uuid = "12345678111"
+            # try:
+            response, platform, model_code = self.model.start_chat_with_doc(model, messages, temperature, top_p, top_k, uuid)
+            formatted_response = self.standardize_response(model_code, platform, response)
+        except Exception as e:
+            return {"error": str(e)}
+        return formatted_response
+    
 
     def standardize_response(self, model_code, platform, response):
         if platform == "groq_platform":
             standardized_response = {
-                "content": response["output"],
+                "content": response,
                 "response_metadata": {
                     "token_usage": {
                         "completion_tokens": 0,
@@ -413,6 +430,7 @@ class ChatController:
             raise Exception(f"Error : {e}")
         return result
     
+
 
 class AsyncCallbackHandler(AsyncIteratorCallbackHandler):
     content: str = ""

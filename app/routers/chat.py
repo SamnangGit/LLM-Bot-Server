@@ -146,18 +146,135 @@ async def chat_with_tool(request: Request, response: Response):
     response_data = chat_controller.start_chat_with_tool(data)
     return {"response": response_data}
 
+@router.post('/chat_with_doc')
+async def chat_with_doc(request: Request, response: Response):
+    if request.headers.get('Content-Type') != 'application/json':
+        raise HTTPException(status_code=400, detail="Invalid Content-Type. Expected application/json")
+    try:
+        data = await request.json()
+        print("data: " + str(data))
+        # uuid = SessionUtils.get_session_id(request)
+        uuid = "123456781111"
+        if uuid is None:
+            response.set_cookie(
+                key="uuid",
+                value=SessionUtils.generate_session_id(),
+                max_age=86400,  # Cookie expires in 1 day
+                httponly=True,
+                samesite="None",  # Allow cross-site cookies
+                secure=False,  # Only send cookie over HTTPS if True
+            )
+        else:
+            data["uuid"] = uuid
+            print("uuid: " + data["uuid"])  
+            print("data: " + str(data))
+        # data["uuid"] = uuid
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON format")
+    print("cookies: " + str(SessionUtils.get_session_id(request)))
+    response_data = chat_controller.start_chat_with_doc(data)
+    return {"response": response_data}
+
 
 
 @router.get("/rag")
 async def rag():
-    from rag.document_loaders.local_docs_loader import LocalDocsLoader
+    # from rag.document_loaders.local_docs_loader import LocalDocsLoader
     # loader = LocalDocsLoader()
     # return loader.csv_loader(file_path="/Users/samnangpheng/Desktop/AllianceX/ChatBot/ServerSide/llm-bot-server/app/public/dataset/healthcare_dataset.csv")
     # return loader.pdf_loader(file_path="/Users/samnangpheng/Desktop/AllianceX/ChatBot/ServerSide/llm-bot-server/app/public/dataset/Week_Thirty_One_Status_Report.pdf")
     # return loader.unstructured_loader(file_path="/Users/samnangpheng/Desktop/AllianceX/ChatBot/ServerSide/llm-bot-server/app/public/dataset/Week_Thirty_One_Status_Report.pdf")
 
-    from rag.document_loaders.web_loader import WebLoader
-    loader = WebLoader()
-    # return loader.single_page_loader(url="https://www.langchain.com/langsmith")
-    # return loader.multiple_pages_loader(urls=["https://www.espn.com/", "https://google.com"])
-    return loader.firecrawl_pages_loader(url="https://www.oknha.news/")
+    # from rag.document_loaders.web_loader import WebLoader
+    # loader = WebLoader()
+    # # return loader.single_page_loader(url="https://www.langchain.com/langsmith")
+    # # return loader.multiple_pages_loader(urls=["https://www.espn.com/", "https://google.com"])
+    # return loader.firecrawl_pages_loader(url="https://www.oknha.news/")
+    from langchain_core.documents import Document
+    from uuid import uuid4
+
+    document_1 = Document(
+    page_content="I had chocalate chip pancakes and scrambled eggs for breakfast this morning.",
+    metadata={"source": "tweet"},
+    )
+
+    document_2 = Document(
+        page_content="The weather forecast for tomorrow is cloudy and overcast, with a high of 62 degrees.",
+        metadata={"source": "news"},
+    )
+
+    document_3 = Document(
+        page_content="Building an exciting new project with LangChain - come check it out!",
+        metadata={"source": "tweet"},
+    )
+
+    document_4 = Document(
+        page_content="Robbers broke into the city bank and stole $1 million in cash.",
+        metadata={"source": "news"},
+    )
+
+    document_5 = Document(
+        page_content="Wow! That was an amazing movie. I can't wait to see it again.",
+        metadata={"source": "tweet"},
+    )
+
+    document_6 = Document(
+        page_content="Is the new iPhone worth the price? Read this review to find out.",
+        metadata={"source": "website"},
+    )
+
+    document_7 = Document(
+        page_content="The top 10 soccer players in the world right now.",
+        metadata={"source": "website"},
+    )
+
+    document_8 = Document(
+        page_content="LangGraph is the best framework for building stateful, agentic applications!",
+        metadata={"source": "tweet"},
+    )
+
+    document_9 = Document(
+        page_content="The stock market is down 500 points today due to fears of a recession.",
+        metadata={"source": "news"},
+    )
+
+    document_10 = Document(
+        page_content="I have a bad feeling I am going to get deleted :(",
+        metadata={"source": "tweet"},
+    )
+
+    documents = [
+        document_1,
+        document_2,
+        document_3,
+        document_4,
+        document_5,
+        document_6,
+        document_7,
+        document_8,
+        document_9,
+        document_10,
+    ]
+
+    uuids = [str(uuid4()) for _ in range(len(documents))]
+
+    from rag.vector_stores.milvus_db import MilvusStore
+    milvus = MilvusStore()
+    # store = milvus.add_document(docs=documents, ids=uuids)
+    # return store
+    # search = milvus.search_document()
+    # return search
+    delete = milvus.delete_document(ids=[uuids[-1]])
+    return delete
+
+
+@router.get("/split")
+async def split():
+    from rag.vector_stores.text_splitter import text_splitter
+    documents, uuids = text_splitter()
+    from rag.vector_stores.milvus_db import MilvusStore
+    milvus = MilvusStore()
+    # store = milvus.add_document(docs=documents, ids=uuids)
+    # search = milvus.search_document(query="McKenzie Kurtz")
+    search = milvus.document_retriever(query=" What they think of ‘Wicked: Part One’ ")
+    return search
