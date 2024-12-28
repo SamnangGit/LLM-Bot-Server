@@ -9,6 +9,7 @@ openai_platform:
   - GPT 3.5 Turbo: gpt-3.5-turbo-instruct
 
 groq_platform:
+  - Llama 3.2 3B: llama-3.2-3b-preview
   - Llama 3.1 70B: llama-3.1-70b-versatile
   - Llama 3.1 8B: llama-3.1-8b-instant
   - Llama3 70B 8192: llama3-70b-8192
@@ -37,3 +38,4 @@ ollama_platform:
   - Llama 3.2 3B: llama3.2
   - Qwen 2: qwen2
   - Nemotron Mini: nemotron-mini
+  - Mixtral: mistral:latest

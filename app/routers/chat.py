@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Request, Response, HTTPException
+from fastapi import APIRouter, Request, Response, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from controllers.chat import ChatController
 from utils.session_util import SessionUtils
+
+import os
 
 router = APIRouter()
 chat_controller = ChatController()
@@ -267,14 +269,27 @@ async def rag():
     delete = milvus.delete_document(ids=[uuids[-1]])
     return delete
 
-
-@router.get("/split")
-async def split():
+@router.post('/split')
+async def split(file: UploadFile = File(...)):
+    # Import inside the route if dynamic imports are needed, 
+    # otherwise, move them to top-level imports
     from rag.vector_stores.text_splitter import text_splitter
-    documents, uuids = text_splitter()
     from rag.vector_stores.milvus_db import MilvusStore
+
+    # Create a directory to store uploaded files if it doesn't exist
+    os.makedirs("uploaded_files", exist_ok=True)
+
+    # Save the uploaded file to the local filesystem
+    file_location = f"uploaded_files/{file.filename}"
+    with open(file_location, "wb") as f:
+        content = await file.read()
+        f.write(content)
+
+    documents, uuids = text_splitter(file_location)
+    
+    # Initialize the Milvus store and add the documents
     milvus = MilvusStore()
-    # store = milvus.add_document(docs=documents, ids=uuids)
-    # search = milvus.search_document(query="McKenzie Kurtz")
-    search = milvus.document_retriever(query=" What they think of ‘Wicked: Part One’ ")
-    return search
+    store = milvus.add_document(docs=documents, ids=uuids)
+
+    # Return the search results
+    return "success"

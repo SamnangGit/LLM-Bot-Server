@@ -193,8 +193,7 @@ class GenerativeModel:
         model_code, platform = self.platform_utils.load_yaml_and_get_model(model)
         if model_code and platform:
             llm = getattr(self, platform)(model_code, temperature, top_p, top_k)
-            self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid)
-        )
+            # self.chat = ConversationChain(llm=llm, memory=self.memory_util.init_buffer_window_memory(uuid))
         else:
             return {"error": "Model not found"}, 400
         try:
@@ -217,7 +216,7 @@ class GenerativeModel:
             print("============================")
             print(prompt)
             print("============================")
-            response = self.chat.predict(input=prompt)
+            response = llm.invoke(prompt)
         except Exception as e:
             return {"error": str(e)}
 

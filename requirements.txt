@@ -45,6 +45,8 @@ langchain-milvus==0.1.7
 langchain-cohere==0.3.1 
 pymilvus==2.4.9
 
+ python-multipart==0.0.19 
+
 # docstring==0.1.2.4 
 
 # transformers==4.42.0 

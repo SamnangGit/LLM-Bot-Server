@@ -8,7 +8,7 @@ URI = "./milvus_rag.db"
 
 class MilvusStore:
     def __init__(self):
-        self.embedded_model = EmbeddedModel().cohere_platform("embed-english-v3.0")
+        self.embedded_model = EmbeddedModel().cohere_platform("embed-multilingual-v3.0")
         self.vector_store = Milvus(
              embedding_function=self.embedded_model,
              connection_args={"uri": URI}

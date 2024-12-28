@@ -95,7 +95,10 @@ class ChatController:
             uuid = "12345678111"
             # try:
             response, platform, model_code = self.model.start_chat_with_doc(model, messages, temperature, top_p, top_k, uuid)
+            print("################################")
+            print(response.content)
             formatted_response = self.standardize_response(model_code, platform, response)
+
         except Exception as e:
             return {"error": str(e)}
         return formatted_response
@@ -104,7 +107,7 @@ class ChatController:
     def standardize_response(self, model_code, platform, response):
         if platform == "groq_platform":
             standardized_response = {
-                "content": response,
+                "content": response.content,
                 "response_metadata": {
                     "token_usage": {
                         "completion_tokens": 0,
@@ -143,7 +146,7 @@ class ChatController:
                 return standardized_response
         elif platform == "openai_platform":
                 standardized_response = {
-                    "content": response,
+                    "content": response.content,
                     "response_metadata": {
                         "token_usage": {
                             "completion_tokens": 0,
@@ -156,7 +159,7 @@ class ChatController:
                 return standardized_response
         elif platform == "gemini_platform":
             standardized_response = {
-                "content": self.parse_chat_messages(response),
+                "content": response.content,
                 "response_metadata": {
                     "token_usage": {
                         "completion_tokens": 0,
