@@ -293,3 +293,23 @@ async def split(file: UploadFile = File(...)):
 
     # Return the search results
     return "success"
+
+
+@router.get('/graph')
+async def graph():
+    from app.agent.supervisor_agent import  DataAnalystAgent
+    data_analyst_agent =  DataAnalystAgent()
+    data_analyst_agent.run()
+    return "success"
+
+
+# Initialize agent
+
+
+# Router endpoint
+@router.post("/process")
+def process_request(request: Request):
+    """Process user request through the agent"""
+    from agent.supervisor_agent import SupervisorAgent
+    agent = SupervisorAgent("Data Analyst", "Data Analyst Agent")
+    return agent.init_graph()

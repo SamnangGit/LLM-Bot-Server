@@ -12,6 +12,7 @@ from langchain_openai import ChatOpenAI, OpenAI
 from langchain_groq import ChatGroq
 from langchain_community.llms import DeepInfra, Ollama
 from langchain_anthropic import ChatAnthropic
+from langchain_nvidia_ai_endpoints import ChatNVIDIA
 
 from langchain.prompts import PromptTemplate
 from langchain.chains import ConversationChain
@@ -109,7 +110,11 @@ class GenerativeModel:
     def ollama_platform(self, model_code, temperature, top_p, top_k):
         llm = Ollama(model=model_code, temperature=temperature)
         return llm
-        
+    
+    def nvidia_platform(self, model_code, temperature, top_p, top_k):
+        llm = ChatNVIDIA(model=model_code, api_key=os.getenv("NVIDIA_API_KEY"), top_p=top_p, temperature=temperature)
+        return llm
+
 
 
     def start_chat(self, model: str, message: Message, temperature: str, top_p: str, top_k: str):
