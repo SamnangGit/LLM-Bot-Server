@@ -6,6 +6,7 @@ from langchain.tools import Tool
 from langchain.agents import AgentExecutor
 import os
 from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
 
 load_dotenv()
 
@@ -29,11 +30,10 @@ class ResearchAgent:
             )
         ]
         
-        self.llm = ChatGroq(
-            model="llama-3.1-70b-versatile",
-            api_key=os.getenv("GROQ_API_KEY"),
-            temperature=0.7,
-            max_tokens=1000
+        self.llm = ChatAnthropic(
+            model_name="claude-3-5-sonnet-20240620",
+            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            temperature=0.7
         )
 
     def init_search_agent(self):

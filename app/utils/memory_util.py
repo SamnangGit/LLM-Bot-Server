@@ -11,7 +11,7 @@ from langchain_community.llms import Ollama
 
 from utils.session_util import SessionUtils
 
-load_dotenv()
+load_dotenv(override=True)
 
 class MemoryUtils:
         

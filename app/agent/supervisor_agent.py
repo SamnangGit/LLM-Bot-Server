@@ -53,7 +53,7 @@ class SupervisorAgent:
         )
         
     
-    def supervisor_node(self, state: State) -> Command[Literal['research_agent, sql_agent, web_client_agent, report_writer_agent, file_agent', "__end__"]]:
+    def supervisor_node(self, state: State) -> Command[Literal['research_agent', 'sql_agent', 'web_client_agent', 'report_writer_agent', 'file_agent', "__end__"]]:
         messages = [
             {"role": "system", "content": system_prompt},
         ] + state["messages"]
